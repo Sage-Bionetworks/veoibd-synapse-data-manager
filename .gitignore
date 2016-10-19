@@ -72,5 +72,8 @@ target/
 # IPython NB Checkpoints
 .ipynb_checkpoints/
 
+# exclude notebooks from source control by default
+/notebooks/
+
 # exclude data from source control by default
 /data/

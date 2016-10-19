@@ -3,6 +3,37 @@ veoibd-synapse-data-manager
 
 Admin related logistics regarding uploading and annotating data to Synapse for members of the VEOIBD consortium.
 
+# Getting Started
+
+## Registering with [Synapse](https://www.synapse.org/)
+
+1. Create an account at [Synapse](https://www.synapse.org/)
+2. You will need to register and become a [certified user](http://docs.synapse.org/articles/getting_started.html#becoming-a-certified-user).
+
+## Installing
+
+Download this project repository:
+
+Using git...
+
+```
+git clone https://github.com/ScottSnapperLab/veoibd-synapse-data-manager.git
+```
+
+Using your web browser...
+
+1. Click [here](https://github.com/ScottSnapperLab/veoibd-synapse-data-manager/releases) to see a list of releases.
+2. Download and unzip.
+3. Navigate into the project folder.
+
+## Configuring
+
+The `configs` folder contains an example configuration file. Copy this example file. Modify the values to fit your site's information.
+
+## Running commands
+
+Still to come...
+
 Project Organization
 ------------
 ```

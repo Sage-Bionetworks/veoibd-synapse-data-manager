@@ -15,11 +15,12 @@ munch
 pip
 
 # Packages specific to your pipeline
+synapseclient
 jupyter
 jupyter_nbextensions_configurator
 widgetsnbextension
 jupyter_contrib_nbextensions
-pandoc  
+pandoc
 
 ipython
 seaborn
