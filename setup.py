@@ -1,6 +1,23 @@
 """Install setup."""
 import setuptools
 
+# def get_reqs(path='requirements.txt'):
+#     """Get list compatable with `install_requires`."""
+#     needed = []
+#     with open(path) as reqs:
+#         usethese = False
+#         for line in reqs:
+#             if usethese:
+#                 needed.append(line.strip())
+#             elif "# NEEDED BY CLI" in line:
+#                 usethese = True
+#
+#     needed = set(needed) - set([""])
+#
+#     return list(needed)
+
+
+
 setuptools.setup(
     name="veoibd_synapse",
     version="0.0.1",
@@ -11,19 +28,11 @@ setuptools.setup(
 
     description="Admin related logistics regarding uploading and annotating data to Synapse for members of the VEOIBD consortium.",
     # long_description=open('README.rst').read(),
+    packages=setuptools.find_packages('src'),
+    package_dir={"": "src"},
 
-    packages=setuptools.find_packages('src/python'),
 
-
-    install_requires=["click",
-                      "munch",
-                      "seaborn",
-                      "pandas",
-                      "numexpr",
-                      "numpy",
-                      "xlrd",
-                      "xlwt",
-                      ],
+    install_requires=[],
 
     classifiers=[
         'Development Status :: 2 - Pre-Alpha',
@@ -32,4 +41,11 @@ setuptools.setup(
         'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
     ],
+
+    entry_points={
+        "console_scripts": [
+            "veoibd_synapse = veoibd_synapse.cli.cli:cli",
+
+        ]
+    },
 )
