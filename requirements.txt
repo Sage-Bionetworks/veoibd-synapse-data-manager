@@ -15,7 +15,7 @@ munch
 pip
 
 # Packages specific to your pipeline
-synapseclient
+synapseclient>=1.5.1
 jupyter
 jupyter_nbextensions_configurator
 widgetsnbextension
