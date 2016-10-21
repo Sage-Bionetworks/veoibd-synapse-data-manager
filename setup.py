@@ -1,23 +1,6 @@
 """Install setup."""
 import setuptools
 
-# def get_reqs(path='requirements.txt'):
-#     """Get list compatable with `install_requires`."""
-#     needed = []
-#     with open(path) as reqs:
-#         usethese = False
-#         for line in reqs:
-#             if usethese:
-#                 needed.append(line.strip())
-#             elif "# NEEDED BY CLI" in line:
-#                 usethese = True
-#
-#     needed = set(needed) - set([""])
-#
-#     return list(needed)
-
-
-
 setuptools.setup(
     name="veoibd_synapse",
     version="0.0.1",
@@ -44,7 +27,7 @@ setuptools.setup(
 
     entry_points={
         "console_scripts": [
-            "veoibd_synapse = veoibd_synapse.cli.cli:cli",
+            "veoibd_synapse = veoibd_synapse.cli.main:run",
 
         ]
     },

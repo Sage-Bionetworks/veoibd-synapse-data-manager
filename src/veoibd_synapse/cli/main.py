@@ -13,6 +13,8 @@ import ruamel.yaml as yaml
 import click
 from click import echo
 
+import veoibd_synapse.cli.config as _config
+
 
 # Metadata
 __author__ = "Gus Dunn"
@@ -50,7 +52,7 @@ def process_config(config=None):
               help="Path to optional config.yaml",
               type=click.File())
 @click.pass_context
-def cli(ctx=None, config=None):
+def run(ctx=None, config=None):
     """Command interface to the veoibd-synapse-manager.
 
     For command specific help text, call the specific
@@ -63,9 +65,9 @@ def cli(ctx=None, config=None):
 
 
 
-@cli.command()
+@run.command()
 @click.option('-k', '--kind',
-              type=click.Choice(['all', 'site', 'api']),
+              type=click.Choice(['all', 'site', 'users', 'projects']),
               help="Which type of config?",
               show_default=True,
               default='all')
@@ -85,37 +87,18 @@ def config(ctx, kind, base_dir):
     factory_resets = Path('configs/factory_resets')
     default_files = {"all": factory_resets.glob('*.yaml'),
                      "site": factory_resets / 'site.yaml',
-                     "api": factory_resets / 'synapse_api.yaml',}
+                     "users": factory_resets / 'users.yaml',
+                     "projects": factory_resets / 'projects.yaml'
+                     }
 
     if kind == 'all':
         for p in default_files['all']:
-            replace_config(name=p.name, factory_resets=factory_resets)
+            _config.replace_config(name=p.name, factory_resets=factory_resets)
     else:
         p = default_files[kind]
-        replace_config(name=p.name, factory_resets=factory_resets)
+        _config.replace_config(name=p.name, factory_resets=factory_resets)
 
 
-def replace_config(name, factory_resets):
-    """Replace existing config file or generate initial one.
-
-    Backup existing file.
-    """
-    default_path = factory_resets / name
-    conf_path = factory_resets.parent / name
-
-    # print(default_path)
-    # print(conf_path)
-    # print(bk_path)
-
-
-
-    if conf_path.exists():
-        bk_path = Path('{name}.bkdup_on_{stamp}'.format(name=str(conf_path),
-                                                        stamp=dt.datetime.today().isoformat()))
-        shutil.move(src=str(conf_path), dst=str(bk_path))
-
-
-    shutil.copy(src=str(default_path), dst=str(conf_path))
 
 
 
@@ -125,4 +108,4 @@ def replace_config(name, factory_resets):
 
 # Business
 if __name__ == '__main__':
-    cli(obj=munch.Munch())
+    run(obj=munch.Munch())

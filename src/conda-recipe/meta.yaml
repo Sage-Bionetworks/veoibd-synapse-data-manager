@@ -13,7 +13,7 @@ build:
   # noarch_python: True
   # preserve_egg_dir: True
   entry_points:
-    - "veoibd_synapse=veoibd_synapse.cli.cli:cli"
+    - "veoibd_synapse=veoibd_synapse.cli.main:run"
 
   # If this is a new build for the same version, increment the build
   # number. If you do not include this key, it defaults to 0.
