@@ -24,10 +24,10 @@ def replace_config(name, factory_resets):
     # print(bk_path)
 
 
-
+    stamp = dt.datetime.today().isoformat()
     if conf_path.exists():
         bk_path = Path('{name}.bkdup_on_{stamp}'.format(name=str(conf_path),
-                                                        stamp=dt.datetime.today().isoformat()))
+                                                        stamp=stamp))
         shutil.move(src=str(conf_path), dst=str(bk_path))
 
 

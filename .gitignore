@@ -1,5 +1,6 @@
-configs/*.yaml
-configs/*.yaml.bkdup_on_*
+configs/*
+!configs/factory_resets
+
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
