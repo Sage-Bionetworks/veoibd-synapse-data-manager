@@ -1,23 +1,13 @@
-COMMON:
-    RUN_NAME: name_me
-    SITE_NAME: name_me_too
-    OUT_DIR_LOCATION: "/path/to/where/you/want/out_dir/to/be/put"
+SITE_NAME: Site Name
 
+INSTITUTION: Institution Name
 
-# --------------------------------------
-RULE_PYSCRIPT:
-    SETTING1: ''
-    IN_FILE1: ''
-    IN_FILE2: ''
+PI:
+    FIRST_NAME: First
+    LAST_NAME: Last
+    EMAIL: user@dom.com
 
-# --------------------------------------
-RULE_RSCRIPT:
-    SETTINGA: ''
-    IN_FILEA: ''
-    IN_FILEB: ''
-
-# --------------------------------------
-RULE_SHELL_CMD:
-    SETTING_1: ''
-    IN_FILE_1: ''
-    IN_FILE_2: ''
+DATA_LIAISON:
+    FIRST_NAME: First
+    LAST_NAME: Last
+    EMAIL: user@dom.com    
