@@ -17,5 +17,9 @@ class VEOIBDSynapseError(Exception):
 
 
 class NoResult(VEOIBDSynapseError):
-    
+
     """Raise when an iteration has nothing to return, but normally would."""
+
+class ValidationError(VEOIBDSynapseError):
+
+    """Raise when a validation/sanity check comes back with unexpected value."""
