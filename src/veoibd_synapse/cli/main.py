@@ -68,7 +68,7 @@ valid_config_kinds = ['all', 'site', 'users', 'projects', 'push', 'pull']
               is_flag=True,
               default=False,
               help="Print the configuration values that will be used and exit.")
-@click.option('-g', '--generate-config',
+@click.option('-g', '--generate-configs',
               is_flag=True,
               help="Copy one or more of the 'factory default' config files to the top-level "
               "config directory. Back ups will be made of any existing config files.",
@@ -80,7 +80,7 @@ valid_config_kinds = ['all', 'site', 'users', 'projects', 'push', 'pull']
               show_default=True,
               default='all')
 @click.pass_context
-def configs(ctx, list_, generate_config, kind):
+def configs(ctx, list_, generate_configs, kind):
     """Manage configuration values and files."""
     if list_:
         conf_str = yaml.dump(unmunchify(ctx.obj.CONFIG), default_flow_style=False)
@@ -93,12 +93,13 @@ def configs(ctx, list_, generate_config, kind):
     default_files = {kind: factory_resets / '{kind}.yaml'.format(kind=kind) for kind in valid_config_kinds[1:]}
     default_files["all"] = factory_resets.glob('*.yaml')
 
-    if kind == 'all':
-        for p in default_files['all']:
+    if generate_configs:
+        if kind == 'all':
+            for p in default_files['all']:
+                _config.replace_config(name=p.name, factory_resets=factory_resets)
+        else:
+            p = default_files[kind]
             _config.replace_config(name=p.name, factory_resets=factory_resets)
-    else:
-        p = default_files[kind]
-        _config.replace_config(name=p.name, factory_resets=factory_resets)
 
 
 @run.command()
@@ -109,7 +110,7 @@ def configs(ctx, list_, generate_config, kind):
 @click.option("--push-config",
               type=click.Path(exists=True, file_okay=True, dir_okay=False),
               default=None,
-              help="Path to the directory where this specific 'push' is configured.")
+              help="Path to the file where this specific 'push' is configured.")
 @click.pass_context
 def push(ctx, user, push_config):
     """Consume a push-config file, execute described transactions, save record of transactions."""
