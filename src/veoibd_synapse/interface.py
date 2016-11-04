@@ -18,43 +18,6 @@ __email__ = "w.gus.dunn@gmail.com"
 
 # Business
 
-class SynNode(Munch):
-
-    """Provide methods and attributes to model an entity node in a DAG of Synapse Entities."""
-
-    def __init__(self, entity_dict, is_root=False):
-        """Initialize an entity node object."""
-        new_dict = self._process_entity_dict(entity_dict=entity_dict)
-        new_dict['is_root'] = is_root
-        Munch.__init__(self, new_dict)
-
-    def _process_entity_dict(self, entity_dict):
-        new_dict = {}
-        for name, value in entity_dict.items():
-            if name.startswith('entity.'):
-                attr_name = name.replace('entity.','')
-                new_dict[attr_name] = value
-            else:
-                msg = """We expect all keys in an entity-query-result dict to begin with 'entity.', \n\tinstead we found: '{key}'.""".format(key=name)
-                raise e.ValidationError(msg)
-        return new_dict
-
-
-    def __str__(self):
-        """Override this."""
-        return self.id
-
-    def __hash__(self):
-        """Return hash value."""
-        return hash(self.__repr__())
-
-    def __eq__(self, other):
-        """Return True if equal."""
-        return self.__hash__() == other.__hash__()
-
-    def __ne__(self, other):
-        """Return True if NOT equal."""
-        return self.__hash__() != other.__hash__()
 
 class VEOProject(object):
 
@@ -65,6 +28,7 @@ class VEOProject(object):
         self.name = name
         self.syn = synapse_client
         self._get_project_entity()
+        self.syn_id = self.project['id']
         self._parent_id = self.project['parentId']
         self.conf = self._process_config_tree(config_tree)
         self.annotations = self._process_annotations(annotations)
@@ -112,7 +76,7 @@ class VEOProject(object):
         dag.node = munchify(dag.node)
 
 
-        nodes = {ent['entity.id']: SynNode(entity_dict=ent) for ent in self.remote.entity_dicts}
+        nodes = {ent['entity.id']: SynNode(entity_dict=ent, synapse_session=self.syn) for ent in self.remote.entity_dicts}
         for node in nodes.values():
             try:
                 dag.add_node(n=node.id, attr_dict=node)

@@ -1,0 +1,16 @@
+PROJECT_ID: "synXXXXXXX"
+DESCRIPTION: "Summarize the purpose of and interactions contained in this document. Example1: 'Uploading new BAM files from recent sequencing run.' Example2: 'Adding new annotation terms to folder XXXXX.'"
+INIT_TIME: None # Will be set at time of command
+INTERACTION_TYPE: pull # valid options include [push, pull]
+
+INTERACTIONS:
+
+    -
+        DESTINATION_DIR: "folder1/folder3/*.bam"
+        ANNOTATIONS:  # All uploaded files will be assigned these annotations, if individual files need specific annotations create single interaction for each
+            KEYWORD_1: value_1 # string
+            KEYWORD_2: 23.7    # float
+        LOCAL_PATHS:
+            - "/path/to/folder/with/stuff"  # entire folder contents will be uploaded into REMOTE_DIR_PATH
+            - "/path/to/other_folder/with/stuff/specific_file.txt" # only this single file will be uploaded into REMOTE_DIR_PATH
+            - "/path/to/yet_another_folder/with/stuff/*.csv" # any file matching the pattern will be uploaded into REMOTE_DIR_PATH
