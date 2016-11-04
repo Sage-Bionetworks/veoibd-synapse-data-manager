@@ -3,7 +3,7 @@ import setuptools
 
 setuptools.setup(
     name="veoibd_synapse",
-    version="0.0.1",
+    version="0.0.2",
     url="git@github.com:ScottSnapperLab/veoibd-synapse-data-manager.git",
 
     author="Gus Dunn",
@@ -11,19 +11,11 @@ setuptools.setup(
 
     description="Admin related logistics regarding uploading and annotating data to Synapse for members of the VEOIBD consortium.",
     # long_description=open('README.rst').read(),
+    packages=setuptools.find_packages('src'),
+    package_dir={"": "src"},
 
-    packages=setuptools.find_packages('src/python'),
 
-
-    install_requires=["click",
-                      "munch",
-                      "seaborn",
-                      "pandas",
-                      "numexpr",
-                      "numpy",
-                      "xlrd",
-                      "xlwt",
-                      ],
+    install_requires=[],
 
     classifiers=[
         'Development Status :: 2 - Pre-Alpha',
@@ -32,4 +24,11 @@ setuptools.setup(
         'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
     ],
+
+    entry_points={
+        "console_scripts": [
+            "veoibd_synapse = veoibd_synapse.cli.main:run",
+
+        ]
+    },
 )

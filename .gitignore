@@ -1,4 +1,6 @@
-configs/synapse_api.yaml
+configs/*
+!configs/factory_resets
+
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

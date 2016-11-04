@@ -1,0 +1,5 @@
+USER1_UNIQ_KEY:
+    FIRST_NAME: First
+    LAST_NAME: Last
+    SYN_USERNAME: username
+    API_KEY: "paste the long set of crazy numbers and letters between the quotes"

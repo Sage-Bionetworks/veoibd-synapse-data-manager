@@ -1,0 +1,28 @@
+PROJECT_ID: "synXXXXXXX"
+PROJECT_NAME: "Name of your Nobel-bound project."
+DESCRIPTION: "Summarize the purpose of and interactions contained in this document. Example1: 'Uploading new BAM files from recent sequencing run.' Example2: 'Adding new annotation terms to folder XXXXX.'"
+INTERACTION_TYPE: push
+COMMON_ANNOTATIONS: None # Annotations here will appear in *all* files uploaded.
+
+INTERACTIONS:
+    -
+        REMOTE_DESTINATION_DIR: "folder1/folder2"
+        CREATE_DIR: True  # if "True", then if REMOTE_DESTINATION_DIR does not exist, create all folders included
+        ANNOTATIONS:  # All of this interaction's files will be assigned these annotations, if individual files need specific annotations create single interaction for each
+            KEYWORD_1: value_1 # string
+            KEYWORD_2: 23.7    # float
+        LOCAL_PATHS:
+            - "/path/to/folder/with/stuff"  # entire folder contents will be uploaded into REMOTE_DIR_PATH
+            - "/path/to/other_folder/with/stuff/specific_file.txt" # only this single file will be uploaded into REMOTE_DIR_PATH
+            - "/path/to/yet_another_folder/with/stuff/*.csv" # any file matching the pattern will be uploaded into REMOTE_DIR_PATH
+
+    -
+        REMOTE_DESTINATION_DIR: "folder1/folder3"
+        CREATE_DIR: True  # if "True", then if REMOTE_DESTINATION_DIR does not exist, create all folders included
+        ANNOTATIONS:  # All of this interaction's files will be assigned these annotations, if individual files need specific annotations create single interaction for each
+            KEYWORD_1: value_1 # string
+            KEYWORD_2: 23.7    # float
+        LOCAL_PATHS:
+            - "/path/to/folder/with/stuff"  # entire folder contents will be uploaded into REMOTE_DIR_PATH
+            - "/path/to/other_folder/with/stuff/specific_file.txt" # only this single file will be uploaded into REMOTE_DIR_PATH
+            - "/path/to/yet_another_folder/with/stuff/*.csv" # any file matching the pattern will be uploaded into REMOTE_DIR_PATH

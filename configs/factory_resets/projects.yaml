@@ -1,0 +1,11 @@
+PROJECT1_UNIQ_KEY:
+    NAME: Human Friendly Name for Project 1
+    CONTACT_PERSON:
+        FIRST: First
+        LAST: Last
+        EMAIL: name@place.com
+
+PROJECT2_UNIQ_KEY:
+    NAME: Human Friendly Name for Project 2
+    CONTACT_PERSON:
+        SYN_USERNAME: synusername
