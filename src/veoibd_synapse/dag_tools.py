@@ -9,6 +9,8 @@ import networkx as nx
 
 from munch import Munch, munchify
 
+import synapseclient as synapse
+
 import veoibd_synapse.errors as e
 
 # Metadata
@@ -75,12 +77,13 @@ class ProjectDAG(nx.DiGraph):
 
     """Class to generate and manage our project structure."""
 
-    def __init__(self, project_id):
+    def __init__(self, project_id, synapse_session):
         """Set up instance."""
         super(ProjectDAG, self).__init__()
 
         self.node = munchify(self.node)
         self.project_id = project_id
+        self.syn = synapse_session
 
     def check_children(self, node_id, func):
         """Return list of child-ids where `func` returns True."""
@@ -109,8 +112,23 @@ class ProjectDAG(nx.DiGraph):
         except IndexError:
             # If no child is found:
             if create:
-                # create it if we were told to
-                raise e.NotImplementedYet()
+                # create synapse folder object if we were told to
+                parent_obj = self.node[origin].obj
+                new_folder = synapse.Folder(name, parent=parent_obj)
+                new_folder = self.syn.store(new_folder)
+                new_folder_id = new_folder['id']
+
+                # add new edge to DAG and mark for update
+                self.add_edge(u=origin, v=new_folder_id, attr_dict=None)
+
+                entity_dict = {k:v  for k,v in new_folder.items()}
+                self.node[new_folder_id] = SynNode(entity_dict=entity_dict,
+                                                   synapse_session=self.syn,
+                                                   is_root=False)
+
+                # send the final result back up the chain.
+                return new_folder_id
+
             else:
                 # raise an error otherwise
                 raise e.NoResult()

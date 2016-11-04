@@ -5,10 +5,10 @@
 from pathlib import Path
 import datetime as dt
 import glob
+from collections import deque
 
 import networkx as nx
-import synapseclient
-from synapseclient import Wiki, File, Project, Folder
+import synapseclient as synapse
 
 from click.utils import echo
 
@@ -36,17 +36,15 @@ class Push(object):
         self.user = self._process_user(user=user, users=self.main_confs.USERS)
         self.push_id = None
         self.push_time = None
+        self.push_config_path = push_config
         self.push_config = self._process_push_config(push_config=push_config)
 
         echo("Initializing Synapse client.")
-        self.syn = synapseclient.Synapse()
+        self.syn = synapse.Synapse()
         self.dag = None
 
         echo("Creating interaction instances.")
         self._create_interactions()
-
-    def search_dag(self, func):
-        """Return nodes where `func` returns True."""
 
 
     def _process_user(self, user, users):
@@ -87,11 +85,11 @@ class Push(object):
         self.syn.login(email=self.user.SYN_USERNAME, apiKey=self.user.API_KEY)
 
         project_name = self.push_config.PROJECT_NAME
-        echo("Acquiring Synapse project instance for {name}.".format(name=project_name))
+        echo("""Acquiring Synapse project instance for "{name}".""".format(name=project_name))
         try:
-            self.project = self.syn.get(Project(name=project_name))
+            self.project = self.syn.get(synapse.Project(name=project_name))
         except TypeError:
-            self.project = self.syn.store(Project(name=project_name))
+            self.project = self.syn.store(synapse.Project(name=project_name))
 
         self._build_remote_entity_dag()
 
@@ -121,6 +119,16 @@ class Push(object):
 
             # create and store the PushInteraction
             self.interactions.append(PushInteraction(info=info, push_obj=self))
+
+        # create special interaction to push the config file to the project
+        record_info = Munch()
+        record_info.REMOTE_DESTINATION_DIR = "push_history"
+        record_info.CREATE_DIR = True
+        record_info.ANNOTATIONS = Munch()
+        record_info.ANNOTATIONS.file_type = 'yaml'
+        record_info.LOCAL_PATHS = [self.push_config_path]
+
+        self.interactions.append(PushInteraction(info=record_info, push_obj=self))
 
 
     def __base_info(self):
@@ -158,7 +166,7 @@ class Push(object):
         echo("Building the project's DAG.")
         self._get_remote_entity_dicts()
 
-        dag = dtools.ProjectDAG(project_id=self.project['id'])
+        dag = dtools.ProjectDAG(project_id=self.project['id'], synapse_session=self.syn)
 
         # add nodes and edges with nodes being simple id names for now
         for n_id,node in self.entity_dicts.items():
@@ -206,6 +214,7 @@ class PushInteraction(BaseInteraction):
 
         More docs...
         """
+        # self.info = None
         super().__init__(info)
         self.push = self._process_push_obj(push_obj)
         self.syn = self.push.syn
@@ -213,10 +222,40 @@ class PushInteraction(BaseInteraction):
 
     def prepare_destination(self):
         """Get or create remote destination."""
+        echo("""Preparing destination "{path}".""".format(path=self.info.REMOTE_DESTINATION_DIR))
+        # does our destination exist?
+        # If not, create Synapse Objects for them and add to the DAG if appropriate.
+        path = deque(self.info.REMOTE_DESTINATION_DIR.split('/'))
+        destination = self.push.dag.follow_path_to_folder(path=path, origin=None, create=self.info.CREATE_DIR)
 
-        # does our destination exist? If not, create it.
-        # if not
+        self.destination = destination
 
+    def add_file(self, loc_file):
+        """Create and add Synapse File object to DAG and upload to Synapse."""
+        echo("""Adding file: "{name}".""".format(name=loc_file.name))
+
+        # Create and add file to Synapse
+        parent_obj = self.push.dag.node[self.destination]
+        annotations = self.info.ANNOTATIONS
+        new_file = synapse.File(path=str(loc_file),
+                                parent=parent_obj,
+                                annotations=annotations)
+        new_file = self.syn.store(new_file)
+        new_file_id = new_file['id']
+
+        # add file to DAG
+        self.push.dag.add_edge(u=self.destination, v=new_file_id, attr_dict=None)
+        entity_dict = {k:v  for k,v in new_file.items()}
+        self.push.dag.node[new_file_id] = dtools.SynNode(entity_dict=entity_dict,
+                                                         synapse_session=self.syn,
+                                                         is_root=False)
+
+    def execute(self):
+        """Execute the push interaction."""
+        self.prepare_destination()
+
+        for loc_file in self.info.LOCAL_PATHS:
+            self.add_file(loc_file=loc_file)
 
     def _process_push_obj(self, push_obj):
         """Make sure we have what we think we have."""
@@ -252,14 +291,11 @@ def main(ctx, user, push_config):
     """Consume a push-config file, execute described transactions, save record of transactions."""
     main_confs = ctx.obj.CONFIG
 
-    syn = synapseclient.Synapse()
+    syn = synapse.Synapse()
     push = Push(main_confs=main_confs,
                 user=user,
                 push_config=push_config)
 
 
     push.login()
-
-    import ipdb; ipdb.set_trace()
-
-    None
+    push.execute()
