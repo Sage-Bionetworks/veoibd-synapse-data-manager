@@ -3,7 +3,7 @@ import setuptools
 
 setuptools.setup(
     name="veoibd_synapse",
-    version="0.0.1",
+    version="0.0.2",
     url="git@github.com:ScottSnapperLab/veoibd-synapse-data-manager.git",
 
     author="Gus Dunn",
