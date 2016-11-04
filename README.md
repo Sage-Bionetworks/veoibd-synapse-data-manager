@@ -3,7 +3,15 @@ veoibd-synapse-data-manager
 
 Admin related logistics regarding uploading and annotating data to Synapse for members of the VEOIBD consortium.
 
-# Getting Started
+# Before we begin
+
+There are a few things that we take for granted at this point.
+
+1. You are a registered Synapse user.
+2. You have either [Conda or Miniconda installed.](http://conda.pydata.org/docs/download.html#should-i-download-anaconda-or-miniconda)
+3. You have the ability to execute Makefiles.
+    - Linux/Unix/OS X **should** work fine out of the box.
+    - Windows will need [Cygwin](https://en.wikipedia.org/wiki/Cygwin) installed or take advantage of the ability to run bash in Windows 10.
 
 ## Registering with [Synapse](https://www.synapse.org/)
 
@@ -12,7 +20,7 @@ Admin related logistics regarding uploading and annotating data to Synapse for m
 
 ## Installing
 
-Download this project repository:
+### Download this project repository
 
 Using git...
 
@@ -26,46 +34,102 @@ Using your web browser...
 2. Download and unzip.
 3. Navigate into the project folder.
 
+### "Install" the package
+
+At your terminal, in the directory we created above:
+
+```
+make install
+```
+
+Now activate the conda environment that was just created with this command:
+
+```
+source activate veoibd_synapse
+```
+
+And lets see the program's main help text:
+
+```
+$ veoibd_synapse --help
+Usage: veoibd_synapse [OPTIONS] COMMAND [ARGS]...
+
+  Command interface to the veoibd-synapse-manager.
+
+  For command specific help text, call the specific command followed by the
+  --help option.
+
+Options:
+  -c, --config DIRECTORY  Path to optional config directory. If `None`,
+                          configs/ is searched for *.yaml files.
+  --home                  Print the home directory of the install and exit.
+  --help                  Show this message and exit.
+
+Commands:
+  configs  Manage configuration values and files.
+  push     Consume a push-config file, execute described...
+```
+
+
+
 ## Configuring
 
-The `configs` folder contains an example configuration file. Copy this example file. Modify the values to fit your site's information.
+The `configs/factory_resets` folder contains examples of configuration files.  Modify the values to fit your site's information.
 
-## Running commands
+To generate fresh example configs in the `config` directory  we use the `veoibd_synapse configs` command.
 
-Still to come...
-
-Project Organization
-------------
 ```
-├── configs
-├── data
-│   ├── external           <- Data from third party sources
-│   ├── interim            <- Intermediate data that has been transformed.
-│   ├── processed          <- The final, canonical data sets for modeling.
-│   └── raw                <- The original, immutable data dump.
-├── docs                   <- A default Sphinx project; see sphinx-doc.org for details
-├── github                 <- Contains a script for creating and pushing to github
-├── LICENSE
-├── Makefile               <- Makefile with commands to provision a Conda environment and register
-│                             the environment's kernel with Jupyter
-├── models                 <- Trained and serialized models, model predictions, or model summaries
-├── notebooks              <- Jupyter notebooks. Naming convention is a date and title
-│                             (`2016-07-28__initial_exploration.ipynb`)
-├── README.md              <- The top-level README for developers using this project.
-├── references             <- Data dictionaries, manuals, and all other explanatory materials.
-├── reports                <- Generated analysis as HTML, PDF, LaTeX, etc.
-│   └── figures            <- Generated graphics and figures to be used in reporting
-├── requirements.txt       <- The requirements file for reproducing the analysis environment.
-├── setup.py               <- Allows installing this project's python code for Notebook importation
-├── Snakefile              <- Snakemake file for reproducing a full pipeline
-├── src                    <- Source code for use in this project.
-│   ├── python
-│   │   ├── data           <- Code to download or generate data
-│   │   ├── features       <- Code to turn raw data into features for modeling
-│   │   ├── models         <- Code to train models and then use trained models to make
-│   │   ├── rules          <- Scripts meant to be plugged in as Snakemake Rules
-│   │   └── visualization  <- Code to create exploratory and results oriented visualizations
-│   └── R
-│       └── rules          <- Scripts meant to be plugged in as Snakemake Rules
-└── tox.ini
+Usage: veoibd_synapse configs [OPTIONS]
+
+  Manage configuration values and files.
+
+Options:
+  -l, --list                      Print the configuration values that will be
+                                  used and exit.
+  -g, --generate-configs          Copy one or more of the 'factory default'
+                                  config files to the top-level config
+                                  directory. Back ups will be made of any
+                                  existing config files.  [default: False]
+  -k, --kind [all|site|users|projects|push|pull]
+                                  Which type of config should we replace?
+                                  [default: all]
+  --help                          Show this message and exit.
+
+```
+
+Run this command to get fresh configs:
+
+```
+veoibd_synapse configs --generate-configs
+```
+
+
+## Uploading a batch of files
+
+- You need to have a project created on Synapse for the files to be sent to.
+- You will need to have created the appropriate configuration files:
+    - See the config section
+
+Lets take a look at the help text for the `push` command:
+
+```
+$ veoibd_synapse push  --help
+
+Usage: veoibd_synapse push [OPTIONS]
+
+  Consume a push-config file, execute described transactions, save record of
+  transactions.
+
+Options:
+  -u, --user TEXT     Provide the ID for a user listed in the 'users' config
+                      file.
+  --push-config PATH  Path to the file where this specific 'push' is
+                      configured.
+  --help              Show this message and exit.
+```
+
+And a quick example command would be:
+
+```
+$ veoibd_synapse push -u GUSDUNN --push-config configs/GUSDUNN/new_WES_files.yaml
 ```
