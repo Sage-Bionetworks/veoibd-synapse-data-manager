@@ -16,6 +16,8 @@ import click
 from click import echo
 
 import veoibd_synapse.cli.config as _config
+import veoibd_synapse.cli.push as _push
+from veoibd_synapse.misc import process_config, update_configs
 import veoibd_synapse.errors as e
 
 
@@ -25,29 +27,7 @@ __email__ = "w.gus.dunn@gmail.com"
 
 HOME_DIR = (Path(os.path.realpath(__file__)).parent / '../../..').resolve()
 
-def update_configs(directory, to_update=None):
-    """Collect, combine, and return all *.yaml files in `directory`."""
-    confs = Path(directory).glob('*.yaml')
 
-    confs = {p.stem.upper(): p for p in confs}
-
-    if to_update is None:
-        to_update = Munch()
-
-
-    for name, conf in confs.items():
-        c = process_config(config=conf)
-        to_update.update(Munch({name: c}))
-
-    return to_update
-
-
-def process_config(config=None):
-    """Prepare single config file."""
-    if config is None:
-        return Munch()
-    else:
-        return munchify(yaml.load(config.open()))
 
 
 
@@ -82,6 +62,7 @@ def run(ctx=None, config=None, home=None):
 
 
 
+valid_config_kinds = ['all', 'site', 'users', 'projects', 'push', 'pull']
 @run.command()
 @click.option("-l", "--list", "list_",
               is_flag=True,
@@ -94,7 +75,7 @@ def run(ctx=None, config=None, home=None):
               show_default=True,
               default=False)
 @click.option('-k', '--kind',
-              type=click.Choice(['all', 'site', 'users', 'projects']),
+              type=click.Choice(valid_config_kinds),
               help="Which type of config should we replace?",
               show_default=True,
               default='all')
@@ -108,11 +89,9 @@ def configs(ctx, list_, generate_config, kind):
 
     base_dir = HOME_DIR / 'configs'
     factory_resets = Path('configs/factory_resets')
-    default_files = {"all": factory_resets.glob('*.yaml'),
-                     "site": factory_resets / 'site.yaml',
-                     "users": factory_resets / 'users.yaml',
-                     "projects": factory_resets / 'projects.yaml'
-                     }
+
+    default_files = {kind: factory_resets / '{kind}.yaml'.format(kind=kind) for kind in valid_config_kinds[1:]}
+    default_files["all"] = factory_resets.glob('*.yaml')
 
     if kind == 'all':
         for p in default_files['all']:
@@ -120,6 +99,23 @@ def configs(ctx, list_, generate_config, kind):
     else:
         p = default_files[kind]
         _config.replace_config(name=p.name, factory_resets=factory_resets)
+
+
+@run.command()
+@click.option("-u", "--user",
+              type=str,
+              default=None,
+              help="Provide the ID for a user listed in the 'users' config file.")
+@click.option("--push-config",
+              type=click.Path(exists=True, file_okay=True, dir_okay=False),
+              default=None,
+              help="Path to the directory where this specific 'push' is configured.")
+@click.pass_context
+def push(ctx, user, push_config):
+    """Consume a push-config file, execute described transactions, save record of transactions."""
+
+    _push.main(ctx, user, push_config)
+
 
 
 
