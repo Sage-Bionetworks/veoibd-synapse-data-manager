@@ -12,6 +12,11 @@ widgetsnbextension
 jupyter_contrib_nbextensions
 pandoc
 ipython
+bedtools
+samtools
+vcftools
+bcftools
+pyparsing
 
 # NEEDED BY CLI
 snakemake>=3.4.2
