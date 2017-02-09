@@ -1,5 +1,6 @@
 """Snakemake file."""
 import os
+import inspect
 
 from pathlib import Path
 
@@ -38,6 +39,7 @@ class MyRun(object):
 
         common = cfg["COMMON"]
 
+        self.snakefile = Path(inspect.getfile(inspect.currentframe()))
         self.globals = munch.Munch()
         self.cfg = cfg
         self.name = common["RUN_NAME"]
@@ -46,18 +48,26 @@ class MyRun(object):
                                                            run_name=self.name
                                                            )
                             )
+        self.pretty_names = {}
         self.log_dir = self.out_dir / "logs"
 
 class MyRule(object):
 
     """Manage the initialization and deployment of rule-specific information."""
 
-    def __init__(self, run, name):
+    def __init__(self, run, name, pretty_name=None):
         """Initialize logs, inputs, outputs, params, etc for a single rule."""
         assert isinstance(run, MyRun)
 
+        if pretty_name is None:
+            pretty_name = name
+
         self.run = run
         self.name = name.lower()
+        self.pretty_name = pretty_name
+
+        self.run.pretty_names[self.name] = pretty_name
+
         self.log_dir = run.log_dir / self.name
         self.log = self.log_dir / "{name}.log".format(name=self.name)
         self.out_dir = run.out_dir / self.name
@@ -133,124 +143,40 @@ rule save_run_config:
 ALL.append(rules.save_run_config.output)
 
 
-# ------------------------- #
-#### RULE_PYSCRIPT ####
-RULE_PYSCRIPT = config["RULE_PYSCRIPT"]
-
-# log
-LOG_RULE_PYSCRIPT = LOGS_DIR+"/rule_pyscript.log"
-
-# params
-SETTING1 = RULE_PYSCRIPT["SETTING1"]
-
-# inputs
-IN_FILE1 = RULE_PYSCRIPT["IN_FILE1"]
-IN_FILE2 = RULE_PYSCRIPT["IN_FILE2"]
-
-# outputs
-RULE_PYSCRIPT_OUT = OUT_DIR+"/RULE_PYSCRIPT"
-
-OUT_FILE1 = RULE_PYSCRIPT_OUT+'/out_file1.csv'
-OUT_FILE2 = RULE_PYSCRIPT_OUT+'/out_file2.txt'
-
-
-# ---
-rule rule_pyscript:
-    params:
-        setting1=SETTING1,
-
-    input:
-        in_file1=IN_FILE1,
-        in_file2=IN_FILE2
-    output:
-        out_file1=OUT_FILE1,
-        out_file2=OUT_FILE2,
-
-    script:
-        "python/scripts/rule_pyscript.py"
-ALL.append(rules.rule_pyscript.output)
 
 
 # ------------------------- #
-#### RULE_RSCRIPT ####
-RULE_RSCRIPT = config["RULE_RSCRIPT"]
-
-# log
-LOG_RULE_RSCRIPT = LOGS_DIR+"/rule_rscript.log"
+#### RECORD_GENES_WITH_VARIANTS ####
+RECORD_GENES_WITH_VARIANTS = MyRule(run=RUN, name="RECORD_GENES_WITH_VARIANTS")
 
 # params
-SETTINGA = RULE_RSCRIPT["SETTINGA"]
-
-# inputs
-IN_FILEA = RULE_RSCRIPT["IN_FILEA"]
-IN_FILEB = RULE_RSCRIPT["IN_FILEB"]
-
-# outputs
-RULE_RSCRIPT_OUT = OUT_DIR+"/rule_rscript"
-
-OUT_FILEA = RULE_RSCRIPT_OUT+'/out_filea.csv'
-OUT_FILEB = RULE_RSCRIPT_OUT+'/out_fileb.txt'
-
-
-# ---
-rule rule_rscript:
-    params:
-        settinga=SETTINGA,
-
-    input:
-        in_filea=IN_FILEA,
-        in_fileb=IN_FILEB
-    output:
-        out_filea=OUT_FILEA,
-        out_fileb=OUT_FILEB,
-
-    script:
-        "r/scripts/rule_rscript.R"
-ALL.append(rules.rule_rscript.output)
-
-# ------------------------- #
-#### RULE_SHELL_CMD ####
-RULE_SHELL_CMD = config["RULE_SHELL_CMD"]
-
-# log
-LOG_RULE_SHELL_CMD = LOGS_DIR+"/rule_shell_cmd.log"
-
-# params
-SETTING_1 = RULE_SHELL_CMD["SETTING_1"]
+RECORD_GENES_WITH_VARIANTS.p.param_1 = RECORD_GENES_WITH_VARIANTS.PARAMS.param_1
 
 # input
-IN_FILE_1 = RULE_SHELL_CMD["IN_FILE_1"]
-IN_FILE_2 = RULE_SHELL_CMD["IN_FILE_2"]
+RECORD_GENES_WITH_VARIANTS.i.input_1 = str(RECORD_GENES_WITH_VARIANTS.IN.input_1 / "{something}.ext")
 
 # output
-RULE_SHELL_CMD_DIR = OUT_DIR+"/rule_shell_cmd"
-RULE_SHELL_CMD_OUT = RULE_SHELL_CMD_DIR+"/rule_shell_cmd.txt"
+RECORD_GENES_WITH_VARIANTS.o.output_1 = str(RECORD_GENES_WITH_VARIANTS.out_dir / "{something}.ext")
 
 # ---
-rule rule_shell_cmd:
+rule RECORD_GENES_WITH_VARIANTS:
     log:
-        path=LOG_RULE_SHELL_CMD
+        path=str(RECORD_GENES_WITH_VARIANTS.log)
 
     params:
-        setting_1=SETTING_1,
+        param_1=RECORD_GENES_WITH_VARIANTS.p.param_1,
 
     input:
-        in_file_1=IN_FILE_1,
-        in_file_2=IN_FILE_2,
+        input_1=RECORD_GENES_WITH_VARIANTS.i.input_1,
 
     output:
-        rule_shell_cmd_out=RULE_SHELL_CMD_OUT,
+        output_1=RECORD_GENES_WITH_VARIANTS.o.output_1,
 
-    shell:
-        """ \
-        cat {params.setting_1} \
-        {input.in_file_1} \
-        {input.in_file_2} \
-        > {output.rule_shell_cmd_out} \
-        &> {log.path}
-        """
+    script:
+        "python/scripts/RECORD_GENES_WITH_VARIANTS.py"
 
-ALL.append(rules.rule_shell_cmd.output)
+PRE.append(rules.RECORD_GENES_WITH_VARIANTS.output)
+
 
 
 # ------------------------- #
@@ -260,3 +186,93 @@ ALL.append(rules.rule_shell_cmd.output)
 # ---
 rule all:
     input: ALL
+
+
+# ------------------------- #
+#### DRAW_RULE_GRAPH ####
+DRAW_RULE_GRAPH = MyRule(run=RUN, name="DRAW_RULE_GRAPH")
+
+# params
+DRAW_RULE_GRAPH.p.pretty_names = RUN.pretty_names
+
+# input
+
+# output
+DRAW_RULE_GRAPH.o.rule_graph_dot = str(DRAW_RULE_GRAPH.out_dir / "rule_graph.dot")
+DRAW_RULE_GRAPH.o.recoded_rule_graph_dot = str(DRAW_RULE_GRAPH.out_dir / "recoded_rule_graph.dot")
+DRAW_RULE_GRAPH.o.recoded_rule_graph_svg = str(DRAW_RULE_GRAPH.out_dir / "recoded_rule_graph.svg")
+
+# ---
+rule draw_rule_graph:
+    log:
+        path=str(DRAW_RULE_GRAPH.log)
+
+    params:
+        pretty_names=DRAW_RULE_GRAPH.p.pretty_names,
+
+    input:
+        Snakefile=str(RUN.snakefile.absolute()),
+        config=rules.save_run_config.output,
+
+    output:
+        rule_graph_dot=DRAW_RULE_GRAPH.o.rule_graph_dot,
+        recoded_rule_graph_dot=DRAW_RULE_GRAPH.o.recoded_rule_graph_dot,
+        recoded_rule_graph_svg=DRAW_RULE_GRAPH.o.recoded_rule_graph_svg,
+
+    run:
+        rule_name = RUN.globals.draw_rule
+        shell("snakemake -p -s {input.Snakefile}  --configfile {input.config} "+rule_name+" --rulegraph > {output.rule_graph_dot}")
+
+        dag.recode_graph(dot=output.rule_graph_dot,
+                         new_dot=output.recoded_rule_graph_dot,
+                         pretty_names=RUN.pretty_names,
+                         rules_to_drop=['save_run_config',rule_name],
+                         color="#50D0FF",
+                         use_pretty_names=False)
+
+        shell("dot -Tsvg {output.recoded_rule_graph_dot} -o {output.recoded_rule_graph_svg} -v ; echo ''")
+
+
+# ------------------------- #
+#### DRAW_DAG_GRAPH ####
+DRAW_DAG_GRAPH = MyRule(run=RUN, name="DRAW_DAG_GRAPH")
+
+# params
+DRAW_DAG_GRAPH.p.pretty_names = RUN.pretty_names
+
+# input
+
+# output
+DRAW_DAG_GRAPH.o.dag_graph_dot = str(DRAW_DAG_GRAPH.out_dir / "dag_graph.dot")
+DRAW_DAG_GRAPH.o.recoded_dag_graph_dot = str(DRAW_DAG_GRAPH.out_dir / "recoded_dag_graph.dot")
+DRAW_DAG_GRAPH.o.recoded_dag_graph_svg = str(DRAW_DAG_GRAPH.out_dir / "recoded_dag_graph.svg")
+
+# ---
+rule draw_dag_graph:
+    log:
+        path=str(DRAW_DAG_GRAPH.log)
+
+    params:
+        pretty_names=DRAW_DAG_GRAPH.p.pretty_names,
+
+    input:
+        Snakefile=str(RUN.snakefile.absolute()),
+        config=rules.save_run_config.output,
+
+    output:
+        dag_graph_dot=DRAW_DAG_GRAPH.o.dag_graph_dot,
+        recoded_dag_graph_dot=DRAW_DAG_GRAPH.o.recoded_dag_graph_dot,
+        recoded_dag_graph_svg=DRAW_DAG_GRAPH.o.recoded_dag_graph_svg,
+
+    run:
+        rule_name = RUN.globals.draw_rule
+        shell("snakemake -p -s {input.Snakefile}  --configfile {input.config} "+rule_name+" --dag > {output.dag_graph_dot}")
+
+        dag.recode_graph(dot=output.dag_graph_dot,
+                         new_dot=output.recoded_dag_graph_dot,
+                         pretty_names=RUN.pretty_names,
+                         rules_to_drop=['save_run_config',rule_name],
+                         color="#50D0FF",
+                         use_pretty_names=False)
+
+        shell("dot -Tsvg {output.recoded_dag_graph_dot} -o {output.recoded_dag_graph_svg} -v ; echo ''")
