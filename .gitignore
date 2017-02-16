@@ -2,6 +2,12 @@ configs/*
 !configs/factory_resets
 
 
+# Certain BIN files
+*.xls*
+
+# LibreOffice lock files
+.~lock.*#
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
