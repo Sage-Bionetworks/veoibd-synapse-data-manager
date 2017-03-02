@@ -1,0 +1,320 @@
+"""Snakemake file."""
+import os
+import inspect
+
+from pathlib import Path
+
+import yaml
+
+import pandas as pd
+import numpy as np
+
+from matplotlib import pyplot as plt
+import seaborn as sns
+sns.set_style("whitegrid")
+
+import munch
+
+
+from veoibd_synapse.rules import pathify_by_key_ends, SnakeRule, SnakeRun
+
+
+#### COMMON RUN STUFF ####
+ORIGINAL_CONFIG_AS_STRING = yaml.dump(config, default_flow_style=False)
+config = pathify_by_key_ends(config)
+config = munch.munchify(config)
+
+RUN = SnakeRun(cfg=config)
+
+PRE = []
+ALL = []
+
+# add specific useful stuff to RUN
+RUN.globals.input_vcfs = [vcf.parts[-1].rstrip('.vcf.gz') for vcf in config.FILTER_SUBJECTS_VCFS.IN.VCF_DIR.glob("*.vcf.gz")]
+
+
+
+############ BEGIN PIPELINE RULES ############
+# ------------------------- #
+#### SAVE_RUN_CONFIG ####
+SAVE_RUN_CONFIG = SnakeRule(run=RUN, name="SAVE_RUN_CONFIG")
+SAVE_RUN_CONFIG.o.file = RUN.out_dir / "{NAME}.yaml".format(NAME=RUN.name)
+
+
+
+rule save_run_config:
+    input:
+    output:
+        file=str(SAVE_RUN_CONFIG.o.file)
+
+    run:
+        with open(output.file, 'w') as cnf_out:
+            cnf_out.write(ORIGINAL_CONFIG_AS_STRING)
+
+PRE.append(rules.save_run_config.output)
+ALL.append(rules.save_run_config.output)
+
+
+
+# ------------------------- #
+#### FILTER_GTF ####
+FILTER_GTF = SnakeRule(run=RUN, name="FILTER_GTF")
+
+# params
+FILTER_GTF.p.a_patterns = FILTER_GTF.PARAMS.A_PATTERNS
+FILTER_GTF.p.b_pattern = FILTER_GTF.PARAMS.B_PATTERN
+
+# input
+FILTER_GTF.i.gtf = str(FILTER_GTF.IN.GTF)
+
+# output
+FILTER_GTF.o.temp_gtf = str(FILTER_GTF.out_dir / "temp_gtf.gtf")
+FILTER_GTF.o.filtered_gtf = str(FILTER_GTF.out_dir / "filtered_gtf.gtf")
+
+# ---
+rule FILTER_GTF:
+    log:
+        path=str(FILTER_GTF.log)
+        
+    params:
+        a_patterns=FILTER_GTF.p.a_patterns,
+        b_pattern=FILTER_GTF.p.b_pattern,
+
+    input:
+        gtf=FILTER_GTF.i.gtf,
+
+    output:
+        temp_gtf=temp(FILTER_GTF.o.temp_gtf),
+        filtered_gtf=FILTER_GTF.o.filtered_gtf,
+
+    run:
+        shell("rm -f {log.path}")
+        
+        cmd_tmplt = """grep -P '{pattern}' {{input.gtf}} >> {{output.temp_gtf}} 2>> {{log.path}}"""
+        
+        for pattern in params.a_patterns:
+            shell(cmd_tmplt.format(pattern=pattern))
+            
+        shell("""grep -P "{pattern}" {{output.temp_gtf}} > {{output.filtered_gtf}} 2>> {{log.path}}""".format(pattern=params.b_pattern))
+        
+
+ALL.append(rules.FILTER_GTF.output)
+
+
+# ------------------------- #
+#### FILTER_SUBJECTS_VCFS ####
+FILTER_SUBJECTS_VCFS = SnakeRule(run=RUN, name="FILTER_SUBJECTS_VCFS")
+
+# input
+FILTER_SUBJECTS_VCFS.i.subjects_vcf = str(FILTER_SUBJECTS_VCFS.IN.VCF_DIR / "{vcf}.vcf.gz"),
+FILTER_SUBJECTS_VCFS.i.filtered_gtf = FILTER_GTF.o.filtered_gtf
+
+# output
+FILTER_SUBJECTS_VCFS.o.subjects_filtered_vcf = str(FILTER_SUBJECTS_VCFS.out_dir / "{vcf}.filtered.vcf")
+
+FILTER_SUBJECTS_VCFS.o.subjects_filtered_vcf_expd = expand(FILTER_SUBJECTS_VCFS.o.subjects_filtered_vcf,
+                                                           vcf=RUN.globals.input_vcfs)
+
+
+# ---
+rule FILTER_SUBJECTS_VCFS:
+    log:
+        path=str(FILTER_SUBJECTS_VCFS.log)
+
+    input:
+        subjects_vcf=FILTER_SUBJECTS_VCFS.i.subjects_vcf,
+        filtered_gtf=FILTER_SUBJECTS_VCFS.i.filtered_gtf,
+
+    output:
+        subjects_filtered_vcf=FILTER_SUBJECTS_VCFS.o.subjects_filtered_vcf,
+
+    run:
+        shell("vt view -H {input.subjects_vcf} > {output.subjects_filtered_vcf} 2> {log.path}")
+        
+        shell("bedtools intersect -u -a {input.subjects_vcf} -b {input.filtered_gtf} >> "
+              " {output.subjects_filtered_vcf} 2>> {log.path}")
+
+ALL.append(FILTER_SUBJECTS_VCFS.o.subjects_filtered_vcf_expd)
+
+
+
+# ------------------------- #
+#### SNPEFF ####
+SNPEFF = SnakeRule(run=RUN, name="SNPEFF")
+
+# params
+SNPEFF.p.genome_db = SNPEFF.PARAMS.GENOME_DB
+
+# input
+SNPEFF.i.subjects_filtered_vcf = FILTER_SUBJECTS_VCFS.o.subjects_filtered_vcf
+
+# output
+SNPEFF.o.stats = str(SNPEFF.out_dir / "{vcf}.html")
+SNPEFF.o.snpeff_vcf = str(SNPEFF.out_dir / "{vcf}.snpeff.vcf")
+# SNPEFF.o.output_1 = str(SNPEFF.out_dir / "{something}.ext")
+
+SNPEFF.o.stats_expd = expand(SNPEFF.o.stats,
+                             vcf=RUN.globals.input_vcfs)
+
+SNPEFF.o.snpeff_vcf_expd = expand(SNPEFF.o.snpeff_vcf,
+                                  vcf=RUN.globals.input_vcfs)
+
+# ---
+rule SNPEFF:
+    log:
+        path=str(SNPEFF.log)
+
+    params:
+        genome_db=SNPEFF.p.genome_db,
+
+    input:
+        subjects_filtered_vcf=SNPEFF.i.subjects_filtered_vcf,
+
+    output:
+        stats=SNPEFF.o.stats,
+        snpeff_vcf=SNPEFF.o.snpeff_vcf,
+
+    shell:
+        "snpEff -v -stats {output.stats} {params.genome_db} {input.subjects_filtered_vcf} > {output.snpeff_vcf} "
+        "&> {log.path} "
+
+ALL.append(SNPEFF.o.stats_expd)
+ALL.append(SNPEFF.o.snpeff_vcf_expd)
+
+
+# ------------------------- #
+#### SNPSIFT ####
+SNPSIFT = SnakeRule(run=RUN, name="SNPSIFT")
+
+# params
+SNPSIFT.p.filter_str = SNPSIFT.PARAMS.FILTER_STR
+
+# input
+SNPSIFT.i.snpeff_vcf = SNPEFF.o.snpeff_vcf
+
+# output
+SNPSIFT.o.snpsift_vcf = str(SNPSIFT.out_dir / "{vcf}.snpsift.vcf")
+
+SNPSIFT.o.snpsift_vcf_expd = expand(SNPSIFT.o.snpsift_vcf,
+                                   vcf=RUN.globals.input_vcfs)
+
+# ---
+rule SNPSIFT:
+    log:
+        path=str(SNPSIFT.log)
+
+    params:
+        filter_str=SNPSIFT.p.filter_str,
+
+    input:
+        snpeff_vcf=SNPSIFT.i.snpeff_vcf,
+
+    output:
+        snpsift_vcf=SNPSIFT.o.snpsift_vcf,
+
+    shell:
+        """cat {input.snpeff_vcf} | SnpSift filter "{params.filter_str}" > {output.snpsift_vcf}"""
+        "&> {log.path} "
+
+ALL.append(SNPSIFT.o.snpsift_vcf_expd)
+
+
+
+
+# ------------------------- #
+
+
+#### ALL ####
+# ---
+rule all:
+    input: ALL
+
+
+# ------------------------- #
+#### DRAW_RULE_GRAPH ####
+DRAW_RULE_GRAPH = SnakeRule(run=RUN, name="DRAW_RULE_GRAPH")
+
+# params
+DRAW_RULE_GRAPH.p.pretty_names = RUN.pretty_names
+
+# input
+
+# output
+DRAW_RULE_GRAPH.o.rule_graph_dot = str(DRAW_RULE_GRAPH.out_dir / "rule_graph.dot")
+DRAW_RULE_GRAPH.o.recoded_rule_graph_dot = str(DRAW_RULE_GRAPH.out_dir / "recoded_rule_graph.dot")
+DRAW_RULE_GRAPH.o.recoded_rule_graph_svg = str(DRAW_RULE_GRAPH.out_dir / "recoded_rule_graph.svg")
+
+# ---
+rule draw_rule_graph:
+    log:
+        path=str(DRAW_RULE_GRAPH.log)
+
+    params:
+        pretty_names=DRAW_RULE_GRAPH.p.pretty_names,
+
+    input:
+        Snakefile=str(RUN.snakefile.absolute()),
+        config=rules.save_run_config.output,
+
+    output:
+        rule_graph_dot=DRAW_RULE_GRAPH.o.rule_graph_dot,
+        recoded_rule_graph_dot=DRAW_RULE_GRAPH.o.recoded_rule_graph_dot,
+        recoded_rule_graph_svg=DRAW_RULE_GRAPH.o.recoded_rule_graph_svg,
+
+    run:
+        rule_name = RUN.globals.draw_rule
+        shell("snakemake -p -s {input.Snakefile}  --configfile {input.config} "+rule_name+" --rulegraph > {output.rule_graph_dot}")
+
+        dag.recode_graph(dot=output.rule_graph_dot,
+                         new_dot=output.recoded_rule_graph_dot,
+                         pretty_names=RUN.pretty_names,
+                         rules_to_drop=['save_run_config',rule_name],
+                         color="#50D0FF",
+                         use_pretty_names=False)
+
+        shell("dot -Tsvg {output.recoded_rule_graph_dot} -o {output.recoded_rule_graph_svg} -v ; echo ''")
+
+
+# ------------------------- #
+#### DRAW_DAG_GRAPH ####
+DRAW_DAG_GRAPH = SnakeRule(run=RUN, name="DRAW_DAG_GRAPH")
+
+# params
+DRAW_DAG_GRAPH.p.pretty_names = RUN.pretty_names
+
+# input
+
+# output
+DRAW_DAG_GRAPH.o.dag_graph_dot = str(DRAW_DAG_GRAPH.out_dir / "dag_graph.dot")
+DRAW_DAG_GRAPH.o.recoded_dag_graph_dot = str(DRAW_DAG_GRAPH.out_dir / "recoded_dag_graph.dot")
+DRAW_DAG_GRAPH.o.recoded_dag_graph_svg = str(DRAW_DAG_GRAPH.out_dir / "recoded_dag_graph.svg")
+
+# ---
+rule draw_dag_graph:
+    log:
+        path=str(DRAW_DAG_GRAPH.log)
+
+    params:
+        pretty_names=DRAW_DAG_GRAPH.p.pretty_names,
+
+    input:
+        Snakefile=str(RUN.snakefile.absolute()),
+        config=rules.save_run_config.output,
+
+    output:
+        dag_graph_dot=DRAW_DAG_GRAPH.o.dag_graph_dot,
+        recoded_dag_graph_dot=DRAW_DAG_GRAPH.o.recoded_dag_graph_dot,
+        recoded_dag_graph_svg=DRAW_DAG_GRAPH.o.recoded_dag_graph_svg,
+
+    run:
+        rule_name = RUN.globals.draw_rule
+        shell("snakemake -p -s {input.Snakefile}  --configfile {input.config} "+rule_name+" --dag > {output.dag_graph_dot}")
+
+        dag.recode_graph(dot=output.dag_graph_dot,
+                         new_dot=output.recoded_dag_graph_dot,
+                         pretty_names=RUN.pretty_names,
+                         rules_to_drop=['save_run_config',rule_name],
+                         color="#50D0FF",
+                         use_pretty_names=False)
+
+        shell("dot -Tsvg {output.recoded_dag_graph_dot} -o {output.recoded_dag_graph_svg} -v ; echo ''")
