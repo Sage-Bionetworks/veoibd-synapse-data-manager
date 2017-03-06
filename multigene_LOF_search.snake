@@ -16,76 +16,7 @@ sns.set_style("whitegrid")
 import munch
 
 
-
-
-def pathify_by_key_ends(dictionary):
-    """Return a dict that has had all values with keys marked as '*_PATH' or '*_DIR' converted to Path() instances."""
-    for key, value in dictionary.items():
-        if isinstance(value, dict):
-            pathify_by_key_ends(value)
-        elif key.endswith("_PATH") or key.endswith("_DIR"):
-            dictionary[key] = Path(value)
-
-    return dictionary
-
-
-class MyRun(object):
-
-    """Initialize and manage information common to the whole run."""
-
-    def __init__(self, cfg):
-        """Initialize common information for a run."""
-        assert isinstance(cfg, dict)
-
-        common = cfg["COMMON"]
-
-        self.snakefile = Path(inspect.getfile(inspect.currentframe()))
-        self.globals = munch.Munch()
-        self.cfg = cfg
-        self.name = common["RUN_NAME"]
-        self.d = common["SHARED"]
-        self.out_dir = Path("{base_dir}/{run_name}".format(base_dir=common["OUT_DIR"],
-                                                           run_name=self.name
-                                                           )
-                            )
-        self.pretty_names = {}
-        self.log_dir = self.out_dir / "logs"
-
-class MyRule(object):
-
-    """Manage the initialization and deployment of rule-specific information."""
-
-    def __init__(self, run, name, pretty_name=None):
-        """Initialize logs, inputs, outputs, params, etc for a single rule."""
-        assert isinstance(run, MyRun)
-
-        if pretty_name is None:
-            pretty_name = name
-
-        self.run = run
-        self.name = name.lower()
-        self.pretty_name = pretty_name
-
-        self.run.pretty_names[self.name] = pretty_name
-
-        self.log_dir = run.log_dir / self.name
-        self.log = self.log_dir / "{name}.log".format(name=self.name)
-        self.out_dir = run.out_dir / self.name
-        self.i = munch.Munch() # inputs
-        self.o = munch.Munch() # outputs
-        self.p = munch.Munch() # params
-
-        self._import_config_dict()
-
-    def _import_config_dict(self):
-        """Inport configuration values set for this rule so they are directly accessable as attributes."""
-        try:
-            for key, val in self.run.cfg[self.name.upper()].items():
-                self.__setattr__(key, val)
-            self.cfg = True
-        except KeyError:
-            self.cfg = False
-
+from veoibd_synapse.rules import pathify_by_key_ends, SnakeRule, SnakeRun
 
 
 #### COMMON RUN STUFF ####
@@ -93,7 +24,7 @@ ORIGINAL_CONFIG_AS_STRING = yaml.dump(config, default_flow_style=False)
 config = pathify_by_key_ends(config)
 config = munch.munchify(config)
 
-RUN = MyRun(cfg=config)
+RUN = SnakeRun(cfg=config)
 
 PRE = []
 ALL = []
@@ -106,7 +37,7 @@ RUN.globals.input_vcfs = [vcf.parts[-1].rstrip('.vcf.gz') for vcf in config.FILT
 ############ BEGIN PIPELINE RULES ############
 # ------------------------- #
 #### SAVE_RUN_CONFIG ####
-SAVE_RUN_CONFIG = MyRule(run=RUN, name="SAVE_RUN_CONFIG")
+SAVE_RUN_CONFIG = SnakeRule(run=RUN, name="SAVE_RUN_CONFIG")
 SAVE_RUN_CONFIG.o.file = RUN.out_dir / "{NAME}.yaml".format(NAME=RUN.name)
 
 
@@ -127,31 +58,44 @@ ALL.append(rules.save_run_config.output)
 
 # ------------------------- #
 #### FILTER_GTF ####
-FILTER_GTF = MyRule(run=RUN, name="FILTER_GTF")
+FILTER_GTF = SnakeRule(run=RUN, name="FILTER_GTF")
 
 # params
-# FILTER_GTF.p.param_1 = FILTER_GTF.PARAMS.param_1
+FILTER_GTF.p.a_patterns = FILTER_GTF.PARAMS.A_PATTERNS
+FILTER_GTF.p.b_pattern = FILTER_GTF.PARAMS.B_PATTERN
 
 # input
 FILTER_GTF.i.gtf = str(FILTER_GTF.IN.GTF)
 
 # output
+FILTER_GTF.o.temp_gtf = str(FILTER_GTF.out_dir / "temp_gtf.gtf")
 FILTER_GTF.o.filtered_gtf = str(FILTER_GTF.out_dir / "filtered_gtf.gtf")
 
 # ---
 rule FILTER_GTF:
     log:
         path=str(FILTER_GTF.log)
+        
+    params:
+        a_patterns=FILTER_GTF.p.a_patterns,
+        b_pattern=FILTER_GTF.p.b_pattern,
 
     input:
         gtf=FILTER_GTF.i.gtf,
 
     output:
+        temp_gtf=temp(FILTER_GTF.o.temp_gtf),
         filtered_gtf=FILTER_GTF.o.filtered_gtf,
 
-    shell:
-        """grep -i 'gene_name "CD55"' {input.gtf} | """
-        """grep -P "\tgene\t" > {output.filtered_gtf} """
+    run:
+        shell("rm -f {log.path}")
+        
+        cmd_tmplt = """grep -P '{pattern}' {{input.gtf}} >> {{output.temp_gtf}} 2>> {{log.path}}"""
+        
+        for pattern in params.a_patterns:
+            shell(cmd_tmplt.format(pattern=pattern))
+            
+        shell("""grep -P "{pattern}" {{output.temp_gtf}} > {{output.filtered_gtf}} 2>> {{log.path}}""".format(pattern=params.b_pattern))
         
 
 ALL.append(rules.FILTER_GTF.output)
@@ -159,7 +103,7 @@ ALL.append(rules.FILTER_GTF.output)
 
 # ------------------------- #
 #### FILTER_SUBJECTS_VCFS ####
-FILTER_SUBJECTS_VCFS = MyRule(run=RUN, name="FILTER_SUBJECTS_VCFS")
+FILTER_SUBJECTS_VCFS = SnakeRule(run=RUN, name="FILTER_SUBJECTS_VCFS")
 
 # input
 FILTER_SUBJECTS_VCFS.i.subjects_vcf = str(FILTER_SUBJECTS_VCFS.IN.VCF_DIR / "{vcf}.vcf.gz"),
@@ -184,9 +128,11 @@ rule FILTER_SUBJECTS_VCFS:
     output:
         subjects_filtered_vcf=FILTER_SUBJECTS_VCFS.o.subjects_filtered_vcf,
 
-    shell:
-        "bedtools intersect -u -a {input.subjects_vcf} -b {input.filtered_gtf} > "
-        "{output.subjects_filtered_vcf}"
+    run:
+        shell("vt view -H {input.subjects_vcf} > {output.subjects_filtered_vcf} 2> {log.path}")
+        
+        shell("bedtools intersect -u -a {input.subjects_vcf} -b {input.filtered_gtf} >> "
+              " {output.subjects_filtered_vcf} 2>> {log.path}")
 
 ALL.append(FILTER_SUBJECTS_VCFS.o.subjects_filtered_vcf_expd)
 
@@ -194,7 +140,7 @@ ALL.append(FILTER_SUBJECTS_VCFS.o.subjects_filtered_vcf_expd)
 
 # ------------------------- #
 #### SNPEFF ####
-SNPEFF = MyRule(run=RUN, name="SNPEFF")
+SNPEFF = SnakeRule(run=RUN, name="SNPEFF")
 
 # params
 SNPEFF.p.genome_db = SNPEFF.PARAMS.GENOME_DB
@@ -238,7 +184,7 @@ ALL.append(SNPEFF.o.snpeff_vcf_expd)
 
 # ------------------------- #
 #### SNPSIFT ####
-SNPSIFT = MyRule(run=RUN, name="SNPSIFT")
+SNPSIFT = SnakeRule(run=RUN, name="SNPSIFT")
 
 # params
 SNPSIFT.p.filter_str = SNPSIFT.PARAMS.FILTER_STR
@@ -286,7 +232,7 @@ rule all:
 
 # ------------------------- #
 #### DRAW_RULE_GRAPH ####
-DRAW_RULE_GRAPH = MyRule(run=RUN, name="DRAW_RULE_GRAPH")
+DRAW_RULE_GRAPH = SnakeRule(run=RUN, name="DRAW_RULE_GRAPH")
 
 # params
 DRAW_RULE_GRAPH.p.pretty_names = RUN.pretty_names
@@ -331,7 +277,7 @@ rule draw_rule_graph:
 
 # ------------------------- #
 #### DRAW_DAG_GRAPH ####
-DRAW_DAG_GRAPH = MyRule(run=RUN, name="DRAW_DAG_GRAPH")
+DRAW_DAG_GRAPH = SnakeRule(run=RUN, name="DRAW_DAG_GRAPH")
 
 # params
 DRAW_DAG_GRAPH.p.pretty_names = RUN.pretty_names

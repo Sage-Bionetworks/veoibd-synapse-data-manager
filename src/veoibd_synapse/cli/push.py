@@ -204,7 +204,6 @@ class BaseInteraction(object):
         self.info = info
 
 
-
 class PushInteraction(BaseInteraction):
 
     """Manage information and execution for a single "push" interaction with Synapse."""
@@ -212,7 +211,9 @@ class PushInteraction(BaseInteraction):
     def __init__(self, info, push_obj):
         """Initialize a PushInteraction.
 
-        More docs...
+        Args:
+            info (dict-like): Basic information tree.
+            push_obj (Push): Pointer the host ``Push`` object.
         """
         # self.info = None
         super().__init__(info)
