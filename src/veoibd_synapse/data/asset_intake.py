@@ -13,6 +13,7 @@ import numpy as np
 
 from munch import Munch, munchify
 
+import veoibd_synapse.data.extract_subids as extract_subids
 import veoibd_synapse.errors as e
 
 # Metadata
@@ -21,6 +22,7 @@ __email__ = "w.gus.dunn@gmail.com"
 
 # Constants
 PARSE_FILE_NAME = Munch()
+PARSE_FILE_NAME.REGENERON1 = extract_subids.bch.subject_from_regeneron1_fname
 
 # Classes
 Row = namedtuple('Row', ["path_hash","file_name",
@@ -115,19 +117,6 @@ def build_asset_table(asset_conf, pathify=True):
     assets = pd.DataFrame(data=rows, index=None, columns=None, dtype=None, copy=False).astype(dtype=dtypes, copy=True, raise_on_error=True)
 
     return assets
-                
 
 
-def subject_from_regeneron1_fname(fname):
-    """Parse a file name from the REGENERON1 data batch to as close to a subject_id as possible.
-    
-    Args:
-        fname (``str``): a file name.
-        
-    Returns:
-        ``str``
-    """
-    return fname.split('_')[1].rstrip('P').rstrip('M').rstrip('D').rstrip('F')
-
-PARSE_FILE_NAME.REGENERON1 = subject_from_regeneron1_fname
     
