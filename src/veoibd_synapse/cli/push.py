@@ -292,7 +292,6 @@ def main(ctx, user, push_config):
     """Consume a push-config file, execute described transactions, save record of transactions."""
     main_confs = ctx.obj.CONFIG
 
-    syn = synapse.Synapse()
     push = Push(main_confs=main_confs,
                 user=user,
                 push_config=push_config)
