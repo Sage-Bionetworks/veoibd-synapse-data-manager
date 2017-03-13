@@ -2,7 +2,8 @@
 """Provide error classes for veoibd-synapse-data-manager."""
 
 # Imports
-
+import logging
+log = logging.getLogger(__name__)
 
 # Metadata
 __author__ = "Gus Dunn"

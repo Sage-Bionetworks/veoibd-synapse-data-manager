@@ -2,11 +2,12 @@
 """Code supporting the information discovery and assimilation of data/file assets."""
 
 # Imports
+import logging
+log = logging.getLogger(__name__)
+
 import os
 from pathlib import Path
 from collections import defaultdict, namedtuple
-import logging
-logger = logging.getLogger(__name__)
 
 import pandas as pd
 import numpy as np

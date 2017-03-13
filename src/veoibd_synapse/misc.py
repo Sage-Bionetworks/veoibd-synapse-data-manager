@@ -2,6 +2,9 @@
 """Provide misc common functions to the rest of the CLI."""
 
 # Imports
+import logging
+log = logging.getLogger(__name__)
+
 from pathlib import Path
 import hashlib
 

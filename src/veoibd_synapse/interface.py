@@ -2,6 +2,9 @@
 """Provide a representation of the interactions between a Synapse Project and other Synapse Entities."""
 
 # Imports
+import logging
+log = logging.getLogger(__name__)
+
 import synapseclient as syn
 
 import networkx as nx

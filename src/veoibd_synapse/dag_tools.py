@@ -2,6 +2,10 @@
 """Provide functions for working with our DAGs."""
 
 # Imports
+import logging
+log = logging.getLogger(__name__)
+
+
 from functools import partial
 from collections import deque
 

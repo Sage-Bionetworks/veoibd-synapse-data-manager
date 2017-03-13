@@ -2,6 +2,9 @@
 """Provide code devoted to uploading data to Synapse."""
 
 # Imports
+import logging
+log = logging.getLogger(__name__)
+
 from pathlib import Path
 import datetime as dt
 import glob
@@ -32,6 +35,8 @@ class Push(object):
 
     def __init__(self, main_confs, user, push_config,):
         """Initialize and validate basic information for a Push."""
+        log.debug("Initializing Push obj.")
+        
         self.main_confs = main_confs
         self.user = self._process_user(user=user, users=self.main_confs.USERS)
         self.push_id = None
@@ -39,11 +44,11 @@ class Push(object):
         self.push_config_path = push_config
         self.push_config = self._process_push_config(push_config=push_config)
 
-        echo("Initializing Synapse client.")
+        log.info("Initializing Synapse client.")
         self.syn = synapse.Synapse()
         self.dag = None
 
-        echo("Creating interaction instances.")
+        log.info("Creating interaction instances.")
         self._create_interactions()
 
 
@@ -81,11 +86,13 @@ class Push(object):
 
     def login(self):
         """Log in to Synapse and acquire the project entity."""
-        echo("Initiating log in.")
+        log.info("Initiating log in to Synapse and acquiring the project entity.")
+        
         self.syn.login(email=self.user.SYN_USERNAME, apiKey=self.user.API_KEY)
 
         project_name = self.push_config.PROJECT_NAME
-        echo("""Acquiring Synapse project instance for "{name}".""".format(name=project_name))
+        log.info("""Acquiring Synapse project instance for "{name}".""".format(name=project_name))
+        
         try:
             self.project = self.syn.get(synapse.Project(name=project_name))
         except TypeError:
@@ -96,6 +103,8 @@ class Push(object):
 
     def execute(self):
         """Execute the configured interactions."""
+        log.info("Executing configured push interations.")
+        
         for interaction in self.interactions:
             interaction.execute()
 
@@ -163,7 +172,7 @@ class Push(object):
 
     def _build_remote_entity_dag(self):
         """Build a DAG of the remote project structure."""
-        echo("Building the project's DAG.")
+        log.info("Building the project's DAG.")
         self._get_remote_entity_dicts()
 
         dag = dtools.ProjectDAG(project_id=self.project['id'], synapse_session=self.syn)
@@ -223,7 +232,7 @@ class PushInteraction(BaseInteraction):
 
     def prepare_destination(self):
         """Get or create remote destination."""
-        echo("""Preparing destination "{path}".""".format(path=self.info.REMOTE_DESTINATION_DIR))
+        log.info("""Preparing destination "{path}".""".format(path=self.info.REMOTE_DESTINATION_DIR))
         # does our destination exist?
         # If not, create Synapse Objects for them and add to the DAG if appropriate.
         path = deque(self.info.REMOTE_DESTINATION_DIR.split('/'))
@@ -233,7 +242,7 @@ class PushInteraction(BaseInteraction):
 
     def add_file(self, loc_file):
         """Create and add Synapse File object to DAG and upload to Synapse."""
-        echo("""Adding file: "{name}".""".format(name=loc_file.name))
+        log.info("""File: "{name}".""".format(name=loc_file.name))
 
         # Create and add file to Synapse
         parent_obj = self.push.dag.node[self.destination]
@@ -295,6 +304,8 @@ def main(ctx, user, push_config):
     push = Push(main_confs=main_confs,
                 user=user,
                 push_config=push_config)
+    
+    
 
 
     push.login()

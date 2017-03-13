@@ -2,6 +2,9 @@
 """Provide functions used in cli.config."""
 
 # Imports
+import logging
+log = logging.getLogger(__name__)
+
 from pathlib import Path
 import datetime as dt
 import shutil
@@ -16,6 +19,9 @@ def replace_config(name, factory_resets):
 
     Backup existing file.
     """
+    log.debug("Generating new configs: {name}".format(name=name))
+    
+    
     default_path = factory_resets / name
     conf_path = factory_resets.parent / name
 
