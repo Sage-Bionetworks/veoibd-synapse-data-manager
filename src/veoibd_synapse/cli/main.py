@@ -21,6 +21,8 @@ from click import echo
 
 import veoibd_synapse.cli.config as _config
 import veoibd_synapse.cli.push as _push
+import veoibd_synapse.cli.syncdb as _syncdb
+
 from veoibd_synapse.misc import process_config, update_configs
 import veoibd_synapse.errors as e
 
@@ -133,7 +135,20 @@ def push(ctx, user, push_config):
 
 
 
+@run.command()
+@click.option("-u", "--user",
+              type=str,
+              default=None,
+              help="Provide the ID for a user listed in the 'users' config file.")
+@click.option("-t", "--team-name",
+              type=str,
+              default=None,
+              help="Provide the team name in quotes.")
+@click.pass_context
+def syncdb(ctx, user, team_name):
+    """Retrieve and build the most up-to-date metadata database info from Synapse for all Projects shared with ``team-name``."""
 
+    _syncdb.main(ctx, user, team_name)
 
 
 
