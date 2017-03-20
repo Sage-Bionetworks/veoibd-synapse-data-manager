@@ -36,7 +36,7 @@ class SnakeRun(object):
 
         common = cfg["COMMON"]
 
-        self.snakefile = Path(inspect.getfile(inspect.currentframe()))
+        self.snakefile = cfg.SNAKEFILE
         self.globals = munch.Munch()
         self.cfg = cfg
         self.name = common["RUN_NAME"]

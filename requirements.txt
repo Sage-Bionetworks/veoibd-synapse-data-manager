@@ -31,3 +31,4 @@ numpy
 xlrd
 xlwt
 networkx
+htslib
