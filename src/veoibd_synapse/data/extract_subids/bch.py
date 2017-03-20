@@ -23,4 +23,5 @@ def subject_from_regeneron1_fname(fname):
     Returns:
         ``str``
     """
-    return fname.split('_')[1].rstrip('P').rstrip('M').rstrip('D').rstrip('F')
+    # return fname.split('_')[1].rstrip('P').rstrip('M').rstrip('D').rstrip('F')
+    return fname.split('_')[1]

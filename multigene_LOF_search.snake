@@ -17,12 +17,14 @@ import munch
 
 
 from veoibd_synapse.rules import pathify_by_key_ends, SnakeRule, SnakeRun
-
+from veoibd_synapse import misc
 
 #### COMMON RUN STUFF ####
 ORIGINAL_CONFIG_AS_STRING = yaml.dump(config, default_flow_style=False)
 config = pathify_by_key_ends(config)
 config = munch.munchify(config)
+config.SNAKEFILE = Path(inspect.getfile(inspect.currentframe()))
+
 
 RUN = SnakeRun(cfg=config)
 
@@ -32,6 +34,8 @@ ALL = []
 # add specific useful stuff to RUN
 RUN.globals.input_vcfs = [vcf.parts[-1].rstrip('.vcf.gz') for vcf in config.FILTER_SUBJECTS_VCFS.IN.VCF_DIR.glob("*.vcf.gz")]
 
+# RUN.globals.draw_rule = config.COMMON.DRAW_RULE
+RUN.globals.draw_rule = 'all'
 
 
 ############ BEGIN PIPELINE RULES ############
@@ -182,6 +186,47 @@ ALL.append(SNPEFF.o.stats_expd)
 ALL.append(SNPEFF.o.snpeff_vcf_expd)
 
 
+
+# ------------------------- #
+#### SNPSIFT_ANNOTATE ####
+SNPSIFT_ANNOTATE = SnakeRule(run=RUN, name="SNPSIFT_ANNOTATE")
+
+# params
+# SNPSIFT_ANNOTATE.p.param_1 = SNPSIFT_ANNOTATE.PARAMS.param_1
+
+# input
+SNPSIFT_ANNOTATE.i.snpeff_vcf = SNPEFF.o.snpeff_vcf
+SNPSIFT_ANNOTATE.i.dbsnp = SNPSIFT_ANNOTATE.IN.DBSNP
+
+# output
+SNPSIFT_ANNOTATE.o.annotated_vcf = str(SNPSIFT_ANNOTATE.out_dir / "{vcf}.snpeff.annotated.vcf")
+
+SNPSIFT_ANNOTATE.o.annotated_vcf_expd = expand(SNPSIFT_ANNOTATE.o.annotated_vcf,
+                                               vcf=RUN.globals.input_vcfs)
+
+# ---
+rule SNPSIFT_ANNOTATE:
+    log:
+        path=str(SNPSIFT_ANNOTATE.log)
+
+    # params:
+    #     param_1=SNPSIFT_ANNOTATE.p.param_1,
+
+    input:
+        snpeff_vcf=SNPSIFT_ANNOTATE.i.snpeff_vcf,
+        dbsnp=SNPSIFT_ANNOTATE.i.dbsnp,
+
+    output:
+        annotated_vcf=SNPSIFT_ANNOTATE.o.annotated_vcf,
+
+    shell:
+        "SnpSift annotate {input.dbsnp} {input.snpeff_vcf} > {output.annotated_vcf} "
+        "&> {log.path} "
+
+ALL.append(SNPSIFT_ANNOTATE.o.annotated_vcf_expd)
+
+
+
 # ------------------------- #
 #### SNPSIFT ####
 SNPSIFT = SnakeRule(run=RUN, name="SNPSIFT")
@@ -190,7 +235,7 @@ SNPSIFT = SnakeRule(run=RUN, name="SNPSIFT")
 SNPSIFT.p.filter_str = SNPSIFT.PARAMS.FILTER_STR
 
 # input
-SNPSIFT.i.snpeff_vcf = SNPEFF.o.snpeff_vcf
+SNPSIFT.i.snpeff_vcf = SNPSIFT_ANNOTATE.o.annotated_vcf
 
 # output
 SNPSIFT.o.snpsift_vcf = str(SNPSIFT.out_dir / "{vcf}.snpsift.vcf")
@@ -265,7 +310,7 @@ rule draw_rule_graph:
         rule_name = RUN.globals.draw_rule
         shell("snakemake -p -s {input.Snakefile}  --configfile {input.config} "+rule_name+" --rulegraph > {output.rule_graph_dot}")
 
-        dag.recode_graph(dot=output.rule_graph_dot,
+        misc.recode_graph(dot=output.rule_graph_dot,
                          new_dot=output.recoded_rule_graph_dot,
                          pretty_names=RUN.pretty_names,
                          rules_to_drop=['save_run_config',rule_name],
@@ -310,7 +355,7 @@ rule draw_dag_graph:
         rule_name = RUN.globals.draw_rule
         shell("snakemake -p -s {input.Snakefile}  --configfile {input.config} "+rule_name+" --dag > {output.dag_graph_dot}")
 
-        dag.recode_graph(dot=output.dag_graph_dot,
+        misc.recode_graph(dot=output.dag_graph_dot,
                          new_dot=output.recoded_dag_graph_dot,
                          pretty_names=RUN.pretty_names,
                          rules_to_drop=['save_run_config',rule_name],
