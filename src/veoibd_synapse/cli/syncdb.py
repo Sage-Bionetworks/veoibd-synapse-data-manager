@@ -55,8 +55,6 @@ class ProjectSubjectDatabase(SubjectDatabase):
     def __init__(self, main_confs, syn, project_id):
         """Initialize and validate basic information.
         
-        Extra information section
-        
         Args:
             main_confs (dict-like): refernce to main configuration tree.
             syn (Synapse): an active synapse connection object.
@@ -111,8 +109,6 @@ class TeamSubjectDatabase(SubjectDatabase):
     def __init__(self, main_confs, syn, team_name):
         """Initialize and validate basic information.
         
-        Extra information section
-        
         Args:
             main_confs (dict-like): refernce to main configuration tree.
             syn (Synapse): an active synapse connection object.
@@ -128,7 +124,7 @@ class TeamSubjectDatabase(SubjectDatabase):
         self.build_project_dbs()
 
     def retrieve_team_project_ids(self):
-        """Retrieve info for all projects shared with ``self.team_name``.
+        """Retrieve info for all projects shared with ``self.team.id``.
         
         Uses the REST API and results are a multilevel dict-like object with two keys:
             - results (list of info dicts)
