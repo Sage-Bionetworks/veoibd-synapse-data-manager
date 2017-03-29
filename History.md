@@ -1,4 +1,11 @@
 
+v0.0.4 / 2017-03-29
+===================
+
+  * TeamSubjectDatabase(SubjectDatabase) is functional
+  * ProjectSubjectDatabase(SubjectDatabase) is functional
+  * added cli.sycdb skeleton
+
 v0.0.3 / 2017-03-20
 ===================
 
