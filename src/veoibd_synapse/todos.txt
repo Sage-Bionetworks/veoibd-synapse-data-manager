@@ -1,0 +1,7 @@
+# TODOS
+# -------------------------
+# DONE: make OSX-64 conda pkg
+# DONE: make manager default to loading factory_reset version of LOGGING config
+# DONE: there is an error in `dag_tools` at the end of `push` that needs to be figured out (this seems to relate to adding the "push_history")
+#       - I THINK that I fixed this by returning "False" when `is_folder_named_x` encounters a KeyError or AttributeError.
+# TODO: create a way to automate sharing project with "team"

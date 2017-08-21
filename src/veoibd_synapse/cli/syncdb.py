@@ -122,6 +122,11 @@ class TeamSubjectDatabase(SubjectDatabase):
         
         self.retrieve_team_project_ids()
         self.build_project_dbs()
+        self.combine_project_dbs()
+        
+    def combine_project_dbs(self):
+        """....."""
+        raise NotImplementedError()
 
     def retrieve_team_project_ids(self):
         """Retrieve info for all projects shared with ``self.team.id``.

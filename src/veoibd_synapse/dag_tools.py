@@ -111,8 +111,8 @@ class ProjectDAG(nx.DiGraph):
             name = path.popleft()
 
         try:
-            func = partial(is_folder_named_x, name=name)
-            next_node_id = self.check_children(node_id=origin, func=func)[0]
+            is_folder_named_x_partial = partial(is_folder_named_x, name=name)
+            next_node_id = self.check_children(node_id=origin, func=is_folder_named_x_partial)[0]
         except IndexError:
             # If no child is found:
             if create:
@@ -152,4 +152,8 @@ class ProjectDAG(nx.DiGraph):
 # Test Functions
 def is_folder_named_x(child, name):
     """Return True if `child` is a folder named `name`."""
-    return (child.nodeType == 'folder') and (child.name == name)
+    try:
+        return (child.nodeType == 'folder') and (child.name == name)
+    except (KeyError, AttributeError):
+        # import ipdb; ipdb.set_trace()
+        return False

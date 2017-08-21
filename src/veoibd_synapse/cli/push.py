@@ -135,6 +135,7 @@ class Push(object):
         record_info.CREATE_DIR = True
         record_info.ANNOTATIONS = Munch()
         record_info.ANNOTATIONS.file_type = 'yaml'
+        record_info.ANNOTATIONS.push_history = True
         record_info.LOCAL_PATHS = [self.push_config_path]
 
         self.interactions.append(PushInteraction(info=record_info, push_obj=self))

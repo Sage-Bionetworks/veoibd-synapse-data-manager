@@ -59,6 +59,9 @@ def run(ctx=None, config=None, home=None):
     ctx.obj.CONFIG = Munch()
 
     top_lvl_confs = HOME_DIR / 'configs'
+    
+    # Load the factory_resets/logging.yaml as an absolute fall-back logging config
+    ctx.obj.CONFIG.LOGGING = process_config(config=top_lvl_confs / 'factory_resets/logging.yaml')
 
     ctx.obj.CONFIG = update_configs(directory=top_lvl_confs, to_update=ctx.obj.CONFIG)
     
