@@ -1,12 +1,22 @@
+# binary document-type files
+*.doc
+*.docx
+*.xls
+*.xlsx
+*.ppt
+*.pptx
+*.pdf
+
 configs/*
 !configs/factory_resets
 
 
-# Certain BIN files
-*.xls*
 
 # LibreOffice lock files
-.~lock.*#
+.~lock.*
+
+# Notebook files
+notebooks/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
@@ -81,9 +91,6 @@ target/
 
 # IPython NB Checkpoints
 .ipynb_checkpoints/
-
-# exclude notebooks from source control by default
-/notebooks/
 
 # exclude data from source control by default
 /data/
