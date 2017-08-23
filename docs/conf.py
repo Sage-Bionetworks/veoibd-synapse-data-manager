@@ -14,6 +14,7 @@
 
 import sys
 import os
+import datetime as dt
 
 from recommonmark.parser import CommonMarkParser
 
@@ -73,7 +74,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'veoibd-synapse-data-manager'
-copyright = u"{% now 'local', '%Y' %}, Gus Dunn"
+copyright = u"{year}, Gus Dunn".format(year=dt.datetime.now().year)
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the

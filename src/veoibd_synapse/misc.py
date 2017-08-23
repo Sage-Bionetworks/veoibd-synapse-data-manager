@@ -3,7 +3,6 @@
 
 # Imports
 import logging
-log = logging.getLogger(__name__)
 
 import textwrap
 from collections import OrderedDict
@@ -13,6 +12,8 @@ import hashlib
 
 from munch import Munch, munchify, unmunchify
 import ruamel.yaml as yaml
+
+log = logging.getLogger(__name__)
 
 # Metadata
 __author__ = "Gus Dunn"
@@ -29,7 +30,6 @@ def update_configs(directory, to_update=None):
     if to_update is None:
         to_update = Munch()
 
-
     for name, conf in confs.items():
         c = process_config(config=conf)
         to_update.update(Munch({name: c}))
@@ -44,8 +44,7 @@ def process_config(config=None):
     else:
         if isinstance(config, str):
             config = Path(config)
-        return munchify(yaml.load(config.open()))
-
+        return munchify(yaml.safe_load(config.open()))
 
 
 def chunk_md5(path, size=1024000):
@@ -70,14 +69,15 @@ def digest_node_line(line):
 
     d = OrderedDict()
     d["num"], fields = l.split('[')
-    fields = fields.replace('rounded,dashed','rounded-dashed')
+    fields = fields.replace('rounded,dashed', 'rounded-dashed')
     fields = fields.rstrip('];').split(',')
-    fields[-1] = fields[-1].replace('rounded-dashed','rounded,dashed')
+    fields[-1] = fields[-1].replace('rounded-dashed', 'rounded,dashed')
     for f in fields:
         key, value = f.split('=')
-        d[key.strip()] = value.strip().replace('"','').replace("'","")
+        d[key.strip()] = value.strip().replace('"', '').replace("'", "")
 
     return d
+
 
 def should_ignore_line(line, strings_to_ignore):
     """Return true if line contains a rule name in `rule_names`."""
@@ -86,6 +86,7 @@ def should_ignore_line(line, strings_to_ignore):
             return True
 
     return False
+
 
 def recode_graph(dot, new_dot, pretty_names, rules_to_drop, color=None, use_pretty_names=True):
     """Change `dot` label info to pretty_names and alter styling."""
@@ -105,28 +106,28 @@ def recode_graph(dot, new_dot, pretty_names, rules_to_drop, color=None, use_pret
 
                     if use_pretty_names:
                         pretty_name = textwrap.fill(pretty_names[rule_name], width=40).replace('\n', '\\n')
-                        full_name = "[{rule_name}]\\n{pretty_name}".format(rule_name=rule_name,pretty_name=pretty_name)
+                        full_name = "[{rule_name}]\\n{pretty_name}".format(rule_name=rule_name, pretty_name=pretty_name)
                         data['label'] = full_name
                         data['color'] = color
                     else:
                         pass
 
-                    fields = ', '.join(['{k} = "{v}"'.format(k=k,v=v) for k, v in data.items()][1:])
+                    fields = ', '.join(['{k} = "{v}"'.format(k=k, v=v) for k, v in data.items()][1:])
 
                     if should_ignore_line(line, strings_to_ignore=rules_to_drop):
                         node_patterns_to_drop.append("\t{num} ->".format(num=data['num']))
                         node_patterns_to_drop.append("-> {num}\n".format(num=data['num']))
                         continue
 
-                    new_line = """\t{num}[{fields}];\n""".format(num=data['num'],fields=fields)
+                    new_line = """\t{num}[{fields}];\n""".format(num=data['num'], fields=fields)
 
                     new_dot.write(new_line)
                 else:
                     if should_ignore_line(line, strings_to_ignore=node_patterns_to_drop):
                         continue
                     elif "fontname=sans" in line:
-                        line = line.replace("fontname=sans","fontname=Cantarell")
-                        line = line.replace("fontsize=10","fontsize=11")
+                        line = line.replace("fontname=sans", "fontname=Cantarell")
+                        line = line.replace("fontsize=10", "fontsize=11")
                         new_dot.write(line)
                     else:
                         new_dot.write(line)

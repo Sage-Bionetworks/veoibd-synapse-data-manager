@@ -3,25 +3,29 @@ Usage
 =====
 
 
+
 -----------------
-Register new data
+Register New Data
 -----------------
-1. xxx
+1. Coming Soon.
 
 ----------------------------
 Sync Local Metadata Database
 ----------------------------
-1. xxx
+1. Coming Soon.
 
 -----------------------
 Query Metadata Database
 -----------------------
-
-1. Sync Local Metadata Database
+1. `Sync Local Metadata Database <#sync-local-metadata-database>`_
 
 
 -------------------
 Download Data Files
 -------------------
+1. Coming Soon.
 
-1. xxx
+-----------------------------------------
+Generate Fresh Set Of Configuration Files
+-----------------------------------------
+1. Coming Soon.

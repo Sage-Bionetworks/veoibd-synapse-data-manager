@@ -75,9 +75,7 @@ Commands:
 
 ## Configuring
 
-The `configs/factory_resets` folder contains examples of configuration files.  Modify the values to fit your site's information.
-
-To generate fresh example configs in the `config` directory  we use the `veoibd_synapse configs` command.
+To generate fresh example configs in the `config` directory, use the `veoibd_synapse configs` command.
 
 ```shell
 Usage: veoibd_synapse configs [OPTIONS]
@@ -97,7 +95,9 @@ Options:
   --help                          Show this message and exit.
 ```
 
-Run this command to get fresh configs:
+- See [Usage](usage.html) for more detailed information.
+
+To generate a full set of fresh configs, run this:
 
 ```shell
 veoibd_synapse configs --generate-configs
@@ -109,6 +109,7 @@ veoibd_synapse configs --generate-configs
 - You need to have a project created on Synapse for the files to be sent to.
 - You will need to have created the appropriate configuration files:
     - See the config section
+- See [Usage](usage.html) for more detailed information.
 
 Lets take a look at the help text for the `push` command:
 

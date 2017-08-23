@@ -12,11 +12,9 @@ Contents:
 .. toctree::
    :maxdepth: 2
 
-   readme
    getting-started
-   commands
-   installation
    usage
+   commands
    contributing
    authors
    history
