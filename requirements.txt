@@ -3,7 +3,7 @@
 
 
 python>=3.5
-graphviz>=2.38.0
+graphviz>=2.38.0    # not_pipable
 pip
 Sphinx
 sphinx_rtd_theme
@@ -11,12 +11,12 @@ jupyter
 jupyter_nbextensions_configurator
 widgetsnbextension
 jupyter_contrib_nbextensions
-pandoc
+pandoc    # not_pipable
 ipython
-bedtools
-samtools
-vcftools
-bcftools
+bedtools    # not_pipable
+samtools    # not_pipable
+vcftools    # not_pipable
+bcftools    # not_pipable
 pyparsing
 bumpversion
 
@@ -34,4 +34,4 @@ numpy
 xlrd
 xlwt
 networkx
-htslib
+htslib    # not_pipable
