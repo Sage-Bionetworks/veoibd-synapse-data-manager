@@ -1,3 +1,6 @@
+[![Documentation Status](https://readthedocs.org/projects/veoibd-synapse-data-manager/badge/?version=latest)](http://veoibd-synapse-data-manager.readthedocs.io/?badge=latest)
+
+
 # Project Description
 Admin related logistics regarding uploading and annotating data to Synapse for members of the VEOIBD consortium.
 

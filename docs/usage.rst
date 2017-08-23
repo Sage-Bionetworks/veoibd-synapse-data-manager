@@ -2,6 +2,26 @@
 Usage
 =====
 
-To use veoibd-synapse-data-manager in a project::
 
-    import veoibd_synapse
+-----------------
+Register new data
+-----------------
+1. xxx
+
+----------------------------
+Sync Local Metadata Database
+----------------------------
+1. xxx
+
+-----------------------
+Query Metadata Database
+-----------------------
+
+1. Sync Local Metadata Database
+
+
+-------------------
+Download Data Files
+-------------------
+
+1. xxx

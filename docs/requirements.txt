@@ -1,1 +1,19 @@
+# THIS IS FOR BUILDING THE DOCS AUTOMATICALLY AT https://readthedocs.org/
+pip
 Sphinx
+sphinx_rtd_theme
+pyparsing
+bumpversion
+snakemake>=3.4.2
+click
+synapseclient>=1.5.1
+munch
+ruamel.yaml
+seaborn
+pandas
+numexpr
+numpy
+xlrd
+xlwt
+networkx
+recommonmark
