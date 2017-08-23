@@ -1,6 +1,4 @@
-veoibd-synapse-data-manager
-==============================
-
+# Project Description
 Admin related logistics regarding uploading and annotating data to Synapse for members of the VEOIBD consortium.
 
 # Before we begin
@@ -24,7 +22,7 @@ There are a few things that we take for granted at this point.
 
 Using git...
 
-```
+```shell
 git clone https://github.com/ScottSnapperLab/veoibd-synapse-data-manager.git
 ```
 
@@ -38,19 +36,19 @@ Using your web browser...
 
 At your terminal, in the directory we created above:
 
-```
+```shell
 make install
 ```
 
-Now activate the conda environment that was just created with this command:
+Now activate the conda environment that we just created with this command:
 
-```
+```shell
 source activate veoibd_synapse
 ```
 
-And lets see the program's main help text:
+And let's see the program's main help text:
 
-```
+```shell
 $ veoibd_synapse --help
 Usage: veoibd_synapse [OPTIONS] COMMAND [ARGS]...
 
@@ -78,7 +76,7 @@ The `configs/factory_resets` folder contains examples of configuration files.  M
 
 To generate fresh example configs in the `config` directory  we use the `veoibd_synapse configs` command.
 
-```
+```shell
 Usage: veoibd_synapse configs [OPTIONS]
 
   Manage configuration values and files.
@@ -94,12 +92,11 @@ Options:
                                   Which type of config should we replace?
                                   [default: all]
   --help                          Show this message and exit.
-
 ```
 
 Run this command to get fresh configs:
 
-```
+```shell
 veoibd_synapse configs --generate-configs
 ```
 
@@ -112,7 +109,7 @@ veoibd_synapse configs --generate-configs
 
 Lets take a look at the help text for the `push` command:
 
-```
+```shell
 $ veoibd_synapse push  --help
 
 Usage: veoibd_synapse push [OPTIONS]
@@ -130,6 +127,6 @@ Options:
 
 And a quick example command would be:
 
-```
+```shell
 $ veoibd_synapse push -u GUSDUNN --push-config configs/GUSDUNN/new_WES_files.yaml
 ```

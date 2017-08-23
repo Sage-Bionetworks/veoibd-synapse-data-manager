@@ -6,6 +6,7 @@ python>=3.5
 graphviz>=2.38.0
 pip
 Sphinx
+sphinx_rtd_theme
 jupyter
 jupyter_nbextensions_configurator
 widgetsnbextension
@@ -17,6 +18,8 @@ samtools
 vcftools
 bcftools
 pyparsing
+bumpversion
+
 
 # NEEDED BY CLI
 snakemake>=3.4.2

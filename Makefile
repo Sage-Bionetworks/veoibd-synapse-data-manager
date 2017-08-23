@@ -1,5 +1,5 @@
-.PHONY: clean clean_env data lint environment serve_nb sync_data_to_s3 sync_data_from_s3 github_remote
-
+.PHONY: clean data lint requirements sync_data_to_s3 sync_data_from_s3 github_remote clean_env serve_nb clean-test clean-pyc clean-build docs help
+.DEFAULT_GOAL := help
 #################################################################################
 # GLOBALS                                                                       #
 #################################################################################
@@ -7,7 +7,7 @@ SHELL := /bin/bash
 
 PROJECT_DIR := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 BUCKET = None
-PROJECT_NAME = veoibd-synapse-data-manager
+PACKAGE_NAME = veoibd_synapse
 PYTHON_INTERPRETER = python3
 CONDA_ENV_NAME = veoibd_synapse
 CONDA_ROOT = $(shell conda info --root)
@@ -33,23 +33,115 @@ else
 PROJECT_CONDA_ACTIVE=False
 endif
 
+define BROWSER_PYSCRIPT
+import os, webbrowser, sys
+try:
+	from urllib import pathname2url
+except:
+	from urllib.request import pathname2url
+
+webbrowser.open("file://" + pathname2url(os.path.abspath(sys.argv[1])))
+endef
+export BROWSER_PYSCRIPT
+
+BROWSER := python -c "$$BROWSER_PYSCRIPT"
+
 
 #################################################################################
 # COMMANDS                                                                      #
 #################################################################################
 
+
+## alias for show-help
+help: show-help
+
+
+## remove all build, test, coverage and Python artifacts
+clean: clean-build clean-pyc clean-test
+
+
+## remove build artifacts
+clean-build:
+	rm -fr build/
+	rm -fr dist/
+	rm -fr .eggs/
+	find . -name '*.egg-info' -exec rm -fr {} +
+	find . -name '*.egg' -exec rm -f {} +
+
+## remove Python file artifacts
+clean-pyc:
+	find . -name '*.pyc' -exec rm -f {} +
+	find . -name '*.pyo' -exec rm -f {} +
+	find . -name '*~' -exec rm -f {} +
+	find . -name '__pycache__' -exec rm -fr {} +
+
+## remove test and coverage artifacts
+clean-test:
+	rm -fr .tox/
+	rm -f .coverage
+	rm -fr htmlcov/
+
+## remove docs artifacts
+clean-docs:
+	$(MAKE) -C docs clean
+
+## check style with flake8
+lint:
+	flake8 $(PACKAGE_NAME) tests
+
+## run tests quickly with the default Python
+test:
+	py.test
+
+## run tests on every Python version with tox
+test-all:
+	tox
+
+## check code coverage quickly with the default Python
+coverage:
+	coverage run --source $(PACKAGE_NAME) -m pytest
+	coverage report -m
+	coverage html
+	$(BROWSER) htmlcov/index.html
+
+## generate Sphinx HTML documentation, including API docs
+docs:
+	rm -f docs/$(PACKAGE_NAME).rst
+	rm -f docs/$(PACKAGE_NAME).*.rst
+	rm -f docs/modules.rst
+	sphinx-apidoc -H 'Code Documentation' -M -f -o docs/ src/$(PACKAGE_NAME)
+	$(MAKE) -C docs clean
+	$(MAKE) -C docs html
+	$(BROWSER) docs/_build/html/index.html
+
+## compile the docs watching for changes
+servedocs: docs
+	watchmedo shell-command -p '*.rst' -c '$(MAKE) -C docs html' -R -D .
+
+## package and upload a release
+release: clean
+	python setup.py sdist upload
+	python setup.py bdist_wheel upload
+
+## builds source and wheel package
+dist: clean
+	python setup.py sdist
+	python setup.py bdist_wheel
+	ls -l dist
+
 error_if_active_conda_env:
 ifeq (True,$(PROJECT_CONDA_ACTIVE))
-$(error "This project's conda env is active." )
+	$(error "This project's conda env is active." )
 endif
 
 serve_nb:
 	source activate $(CONDA_ENV_NAME); \
 	jupyter notebook --notebook-dir notebooks
 
-
+## installs virtual environments and requirements
 install: install_python install_r
 
+## uninstalls virtual environments and requirements
 uninstall: error_if_active_conda_env uninstall_python
 
 
@@ -59,7 +151,8 @@ ifeq ($(CONDA_ENV_PY), $(shell which python))
 else
 	conda create -n $(CONDA_ENV_NAME) --file requirements.txt --yes  && \
 	source activate $(CONDA_ENV_NAME) && \
-	python -m ipykernel install --user --name $(CONDA_ENV_NAME) --display-name "$(CONDA_ENV_NAME)" && \
+	python -m ipykernel install --sys-prefix --name $(CONDA_ENV_NAME) --display-name "$(CONDA_ENV_NAME)" && \
+	pip install -r requirements.pip.txt
 	pip install -e .
 endif
 
@@ -78,10 +171,47 @@ install_r:
 	rm -rf $(CONDA_ENV_DIR)/share/jupyter/kernels/ir && \
 	R -e "IRkernel::installspec(name = '$(CONDA_ENV_NAME)_R', displayname = '$(CONDA_ENV_NAME)_R')"
 
+## inits a local git repo, creates a repo on GitHub, pushes local to GitHub
 github_remote:
 	bash github/push_to_new_remote.sh
 
 
+## Aquire the latest version of the  VIPER RNA-seq Pipeline if needed
+get_viper_static_files:
+ifeq (True,$(HAS_ARIA))
+		@echo ">>> Detected aria2c, starting PARALLEL download."
+		aria2c -d $(VIPER_STATIC_SYSTEM_DIR) -i .viper_static_urls
+
+
+else
+		@echo ">>> Did not detect aria2c, starting serial downloads with wget instead."
+		wget -c  'https://www.dropbox.com/sh/8cqooj05i7rnyou/AADjyXpbADhHUCr_WAscP9MEa/hg19.tar.gz?dl=1'
+		wget -c  'https://www.dropbox.com/sh/8cqooj05i7rnyou/AADUxqgzpcoVyjUcwYb5dhMBa/mm9.tar.gz?dl=1'
+		wget -c  'https://www.dropbox.com/sh/8cqooj05i7rnyou/AABbSIjk9124KZh3IdV6ob31a/snpEff.tar.gz?dl=1'
+endif
+
+
+
+
+# install_viper: clean_viper get_viper_static_files
+install_viper: clean_viper
+	git clone https://bitbucket.org/cfce/viper.git
+	patch -p0 < patches/viper/environment.yml.patch
+
+	conda env create -f viper/envs/environment.yml -n $(CONDA_ENV_NAME_VIPER)
+	ln -s $(VIPER_STATIC_SYSTEM_DIR) $(VIPER_STATIC_PROJ_DIR)
+	ln -s $(VIPER_STATIC_PROJ_DIR) ref_files
+
+	mkdir -p $(VIPER_CONFIGS_DIR)
+	cp viper/config.yaml $(VIPER_CONFIGS_DIR)
+	cp viper/metasheet.csv $(VIPER_CONFIGS_DIR)
+
+clean_viper:
+	rm -rf $$(jupyter --data-dir)/kernels/$(CONDA_ENV_NAME_VIPER)
+	rm -rf $(CONDA_ENV_DIR_VIPER)
+	rm -rf viper
+	rm -rf data/external/viper_static_files
+	rm -rf ref_files
 
 
 ## Install Python Dependencies
@@ -98,10 +228,6 @@ clean_bytecode:
 	find . -name "__pycache__" -type d -exec rm -r {} \; ; \
 	find . -name "*.pyc" -exec rm {} \;
 
-## Lint using flake8
-lint:
-	flake8 --exclude=lib/,bin/,docs/conf.py .
-
 ## Upload Data to S3
 sync_data_to_s3:
 	aws s3 sync data/ s3://$(BUCKET)/data/
@@ -115,17 +241,17 @@ create_environment:
 ifeq (True,$(HAS_CONDA))
 		@echo ">>> Detected conda, creating conda environment."
 ifeq (3,$(findstring 3,$(PYTHON_INTERPRETER)))
-	conda create --name $(PROJECT_NAME) python=3.5
+	conda create --name $(CONDA_ENV_NAME) python=3.5
 else
-	conda create --name $(PROJECT_NAME) python=2.7
+	conda create --name $(CONDA_ENV_NAME) python=2.7
 endif
-		@echo ">>> New conda env created. Activate with:\nsource activate $(PROJECT_NAME)"
+		@echo ">>> New conda env created. Activate with:\nsource activate $(CONDA_ENV_NAME)"
 else
 	@pip install -q virtualenv virtualenvwrapper
 	@echo ">>> Installing virtualenvwrapper if not already intalled.\nMake sure the following lines are in shell startup file\n\
 	export WORKON_HOME=$$HOME/.virtualenvs\nexport PROJECT_HOME=$$HOME/Devel\nsource /usr/local/bin/virtualenvwrapper.sh\n"
-	@bash -c "source `which virtualenvwrapper.sh`;mkvirtualenv $(PROJECT_NAME) --python=$(PYTHON_INTERPRETER)"
-	@echo ">>> New virtualenv created. Activate with:\nworkon $(PROJECT_NAME)"
+	@bash -c "source `which virtualenvwrapper.sh`;mkvirtualenv $(CONDA_ENV_NAME) --python=$(PYTHON_INTERPRETER)"
+	@echo ">>> New virtualenv created. Activate with:\nworkon $(CONDA_ENV_NAME)"
 endif
 
 ## Test python environment is setup correctly
@@ -135,6 +261,7 @@ test_environment:
 #################################################################################
 # Utils                                                                         #
 #################################################################################
+## patches the viper environment.yml
 patch_viper_env_yml:
 	diff -Naur viper/envs/environment.yml patches/viper/environment.yml > patches/viper/environment.yml.patch
 
@@ -167,6 +294,7 @@ patch_viper_env_yml:
 # Separate expressions are necessary because labels cannot be delimited by
 # semicolon; see <http://stackoverflow.com/a/11799865/1968>
 .PHONY: show-help
+## Show the available make targets
 show-help:
 	@echo "$$(tput bold)Available rules:$$(tput sgr0)"
 	@echo

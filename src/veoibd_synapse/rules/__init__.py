@@ -16,7 +16,7 @@ __all__ = ["pathify_by_key_ends","SnakeRun","SnakeRule"]
 
 
 def pathify_by_key_ends(dictionary):
-    """Return a dict that has had all values with keys marked as '*_PATH' or '*_DIR' converted to Path() instances."""
+    """Return a dict that has had all values with keys marked as '\*_PATH' or '\*_DIR' converted to Path() instances."""
     for key, value in dictionary.items():
         if isinstance(value, dict):
             pathify_by_key_ends(value)

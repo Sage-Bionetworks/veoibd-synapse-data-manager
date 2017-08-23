@@ -21,7 +21,7 @@ __email__ = "w.gus.dunn@gmail.com"
 
 # Functions
 def update_configs(directory, to_update=None):
-    """Collect, combine, and return all *.yaml files in `directory`."""
+    """Collect, combine, and return all \*.yaml files in `directory`."""
     confs = Path(directory).glob('*.yaml')
 
     confs = {p.stem.upper(): p for p in confs}
@@ -61,8 +61,8 @@ def chunk_md5(path, size=1024000):
             md5.update(data)
 
     return md5.hexdigest()
-    
-    
+
+
 # DAG and rulegraph stuff
 def digest_node_line(line):
     """Return OrderedDict of relevant line parts."""
@@ -130,4 +130,3 @@ def recode_graph(dot, new_dot, pretty_names, rules_to_drop, color=None, use_pret
                         new_dot.write(line)
                     else:
                         new_dot.write(line)
-

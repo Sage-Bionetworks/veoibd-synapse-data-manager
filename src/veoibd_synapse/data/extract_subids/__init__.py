@@ -1,3 +1,3 @@
 from . import bch
 
-__all__ = [bch]
+__all__ = ["bch"]

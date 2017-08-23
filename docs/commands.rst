@@ -1,5 +1,5 @@
-Commands
-========
+A few of the Makefile Commands
+==============================
 
 The Makefile contains the central entry points for common tasks related to this project.
 
@@ -17,7 +17,10 @@ The Makefile contains the central entry points for common tasks related to this 
 
 
 
-
+For the full list:
+```bash
+> make help
+```
 
 
 
