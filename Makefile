@@ -14,6 +14,9 @@ CONDA_ROOT = $(shell conda info --root)
 CONDA_ENV_DIR = $(CONDA_ROOT)/envs/$(CONDA_ENV_NAME)
 CONDA_ENV_PY = $(CONDA_ENV_DIR)/bin/python
 
+TEST_VENV=venv-test
+
+
 ifeq (,$(shell which conda))
 HAS_CONDA=False
 else
@@ -170,6 +173,17 @@ install_r:
 	conda install --file requirements.r.txt --yes && \
 	rm -rf $(CONDA_ENV_DIR)/share/jupyter/kernels/ir && \
 	R -e "IRkernel::installspec(name = '$(CONDA_ENV_NAME)_R', displayname = '$(CONDA_ENV_NAME)_R')"
+
+## Tests `python setup.py install` in a fresh venv
+venv-test: venv-clean
+	python3 -m venv --clear $(TEST_VENV) && \
+	source $(TEST_VENV)/bin/activate && \
+	pip install -e . 
+
+## Clean up after venv-test
+venv-clean:
+	rm -rf $(TEST_VENV)
+
 
 ## inits a local git repo, creates a repo on GitHub, pushes local to GitHub
 github_remote:
