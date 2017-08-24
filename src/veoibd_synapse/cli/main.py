@@ -2,16 +2,10 @@
 """Provide command line interface to the synapse manager."""
 
 # Imports
-import logging.config
-import logging
-log = logging.getLogger(__name__)
-
 import os
 from pathlib import Path
 import datetime as dt
 import shutil
-import pprint as pp
-
 
 from munch import Munch, munchify, unmunchify
 import ruamel.yaml as yaml
@@ -26,6 +20,7 @@ import veoibd_synapse.cli.syncdb as _syncdb
 from veoibd_synapse.misc import process_config, update_configs
 import veoibd_synapse.errors as e
 
+from logzero import logger as log
 
 # Metadata
 __author__ = "Gus Dunn"
@@ -35,10 +30,10 @@ HOME_DIR = (Path(os.path.realpath(__file__)).parent / '../../..').resolve()
 
 
 def setup_logging(conf_dict):
-    """Setup logging configurations."""
-    logging.config.dictConfig(config=conf_dict)
+    """Set up logging configurations."""
+    # logging.config.dictConfig(config=conf_dict)
+    # NOTE: converting to logzero. for now ignore logging config till I can learn how to alter logzero with the configs.
     log.debug(msg='Setup logging configurations.')
-    
 
 
 @click.group(invoke_without_command=True)
@@ -59,26 +54,32 @@ def run(ctx=None, config=None, home=None):
     ctx.obj.CONFIG = Munch()
 
     top_lvl_confs = HOME_DIR / 'configs'
-    
+
     # Load the factory_resets/logging.yaml as an absolute fall-back logging config
     ctx.obj.CONFIG.LOGGING = process_config(config=top_lvl_confs / 'factory_resets/logging.yaml')
 
     ctx.obj.CONFIG = update_configs(directory=top_lvl_confs, to_update=ctx.obj.CONFIG)
-    
+
     if config:
         ctx.obj.CONFIG = update_configs(directory=config, to_update=ctx.obj.CONFIG)
-    
+
     setup_logging(conf_dict=ctx.obj.CONFIG.LOGGING)
-    
+
     if home:
         log.debug("Printing HOME_DIR")
         print(HOME_DIR)
         exit(0)
 
 
+valid_config_kinds = ['all',
+                      'site',
+                      'users',
+                      'projects',
+                      'push',
+                      'pull',
+                      'logging']
 
 
-valid_config_kinds = ['all', 'site', 'users', 'projects', 'push', 'pull', 'logging']
 @run.command()
 @click.option("-l", "--list", "list_",
               is_flag=True,
@@ -92,31 +93,47 @@ valid_config_kinds = ['all', 'site', 'users', 'projects', 'push', 'pull', 'loggi
               default=False)
 @click.option('-k', '--kind',
               type=click.Choice(valid_config_kinds),
-              help="Which type of config should we replace?",
+              help="Which type(s) of config should we replace? May be repeated.",
+              multiple=True,
               show_default=True,
-              default='all')
+              default=['all'])
+@click.option('-p', '--prefix',
+              type=click.STRING,
+              help="""A prefix to tag the new config file(s). Defaults to the ISO formatted time. Example: "2017-08-24T10:08:42.506279".""",
+              show_default=False,
+              default=None)
 @click.pass_context
-def configs(ctx, list_, generate_configs, kind):
+def configs(ctx, list_, generate_configs, kind, prefix):
     """Manage configuration values and files."""
+    print
+    if prefix is None:
+        prefix = dt.datetime.today().isoformat()
+
+    log.debug("kind = {}".format(kind))
+
     if list_:
-        log.debug("Listing current configuration state.")
+        log.info("Listing current configuration state.")
         conf_str = yaml.dump(unmunchify(ctx.obj.CONFIG), default_flow_style=False)
         echo(conf_str)
         exit(0)
 
-    base_dir = HOME_DIR / 'configs'
     factory_resets = Path('configs/factory_resets')
 
-    default_files = {kind: factory_resets / '{kind}.yaml'.format(kind=kind) for kind in valid_config_kinds[1:]}
+    default_files = {k: factory_resets / '{kind}.yaml'.format(kind=k) for k in valid_config_kinds[1:]}
     default_files["all"] = factory_resets.glob('*.yaml')
 
     if generate_configs:
-        if kind == 'all':
+        if 'all' in kind:
             for p in default_files['all']:
-                _config.replace_config(name=p.name, factory_resets=factory_resets)
+                _config.replace_config(name=p.name,
+                                       factory_resets=factory_resets,
+                                       prefix=prefix)
         else:
-            p = default_files[kind]
-            _config.replace_config(name=p.name, factory_resets=factory_resets)
+            for k in kind:
+                p = default_files[k]
+                _config.replace_config(name=p.name,
+                                       factory_resets=factory_resets,
+                                       prefix=prefix)
 
 
 @run.command()
