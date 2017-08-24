@@ -15,8 +15,13 @@
 import sys
 import os
 import datetime as dt
+from pathlib import Path
+import shlex
 
+from sphinx.apidoc import main as sphinx_apidoc
 from recommonmark.parser import CommonMarkParser
+
+from logzero import logger as log
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
@@ -36,12 +41,27 @@ import veoibd_synapse
 
 # -- General configuration ---------------------------------------------
 
+# Set things up for RTD to be able to autogenerate our api-docs
+def run_apidoc(_):
+    cur_dir = Path(__file__).parent.resolve()
+    module_path = cur_dir.parent / "src/veoibd_synapse"
+    cmd_opts = "-M -f -o {cur_dir} {module_path} -H 'Source Code Documentation'"
+    opt_list = shlex.split(cmd_opts.format(cur_dir=str(cur_dir),
+                                           module_path=str(module_path)))
+    sphinx_apidoc(opt_list)
+
+
+def setup(app):
+    app.connect('builder-inited', run_apidoc)
+
 # If your documentation needs a minimal Sphinx version, state it here.
 # needs_sphinx = '1.0'
 
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
-extensions = ['sphinx.ext.autodoc', 'sphinx.ext.viewcode', 'sphinx.ext.napoleon']
+extensions = ['sphinx.ext.autodoc',
+              'sphinx.ext.viewcode',
+              'sphinx.ext.napoleon']
 
 
 # Napoleon settings
