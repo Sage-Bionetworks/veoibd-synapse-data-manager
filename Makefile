@@ -112,7 +112,7 @@ docs:
 	rm -f docs/$(PACKAGE_NAME).rst
 	rm -f docs/$(PACKAGE_NAME).*.rst
 	rm -f docs/modules.rst
-	sphinx-apidoc -H 'Code Documentation' -M -f -o docs/ src/$(PACKAGE_NAME)
+	sphinx-apidoc -H 'Source Code Documentation' -M -f -o docs/ src/$(PACKAGE_NAME)
 	$(MAKE) -C docs clean
 	$(MAKE) -C docs html
 	$(BROWSER) docs/_build/html/index.html
@@ -178,7 +178,7 @@ install_r:
 venv-test: venv-clean
 	python3 -m venv --clear $(TEST_VENV) && \
 	source $(TEST_VENV)/bin/activate && \
-	pip install -e . 
+	pip install -e .
 
 ## Clean up after venv-test
 venv-clean:
