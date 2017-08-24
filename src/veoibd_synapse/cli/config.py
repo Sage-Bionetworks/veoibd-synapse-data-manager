@@ -2,10 +2,9 @@
 """Provide functions used in cli.config."""
 
 # Imports
-import logging
-log = logging.getLogger(__name__)
-
+from logzero import logger as log
 from pathlib import Path
+import shutil
 import datetime as dt
 import shutil
 

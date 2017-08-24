@@ -2,8 +2,7 @@
 """Provide code devoted to retrieving and building the most up-to-date metadata database info from Synapse."""
 
 # Imports
-import logging
-log = logging.getLogger(__name__)
+from logzero import logger as log
 
 from pathlib import Path
 # import datetime as dt

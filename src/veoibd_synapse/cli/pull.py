@@ -2,8 +2,7 @@
 """Provide code devoted to downloading data from Synapse."""
 
 # Imports
-import logging
-log = logging.getLogger(__name__)
+from logzero import logger as log
 
 # Metadata
 __author__ = "Gus Dunn"

@@ -2,7 +2,7 @@
 """Provide misc common functions to the rest of the CLI."""
 
 # Imports
-import logging
+from logzero import logger as log
 
 import textwrap
 from collections import OrderedDict
@@ -12,8 +12,6 @@ import hashlib
 
 from munch import Munch, munchify, unmunchify
 import ruamel.yaml as yaml
-
-log = logging.getLogger(__name__)
 
 # Metadata
 __author__ = "Gus Dunn"

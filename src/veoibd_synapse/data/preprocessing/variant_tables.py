@@ -2,9 +2,7 @@
 """Provide code to generate Metadata tables concerning summaries of variants per subject."""
 
 # Imports
-import logging
-log = logging.getLogger(__name__)
-
+from logzero import logger as log
 
 import veoibd_synapse.errors as e
 from veoibd_synapse.data import loaders

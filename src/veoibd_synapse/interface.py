@@ -2,8 +2,7 @@
 """Provide a representation of the interactions between a Synapse Project and other Synapse Entities."""
 
 # Imports
-import logging
-log = logging.getLogger(__name__)
+from logzero import logger as log
 
 import synapseclient as syn
 

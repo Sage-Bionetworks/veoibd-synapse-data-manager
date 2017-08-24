@@ -2,8 +2,7 @@
 """Provide code devoted to uploading data to Synapse."""
 
 # Imports
-import logging
-log = logging.getLogger(__name__)
+from logzero import logger as log
 
 from pathlib import Path
 import datetime as dt
@@ -36,7 +35,7 @@ class Push(object):
     def __init__(self, main_confs, user, push_config,):
         """Initialize and validate basic information for a Push."""
         log.debug("Initializing Push obj.")
-        
+
         self.main_confs = main_confs
         self.user = self._process_user(user=user, users=self.main_confs.USERS)
         self.push_id = None
@@ -87,12 +86,12 @@ class Push(object):
     def login(self):
         """Log in to Synapse and acquire the project entity."""
         log.info("Initiating log in to Synapse and acquiring the project entity.")
-        
+
         self.syn.login(email=self.user.SYN_USERNAME, apiKey=self.user.API_KEY)
 
         project_name = self.push_config.PROJECT_NAME
         log.info("""Acquiring Synapse project instance for "{name}".""".format(name=project_name))
-        
+
         try:
             self.project = self.syn.get(synapse.Project(name=project_name))
         except TypeError:
@@ -104,7 +103,7 @@ class Push(object):
     def execute(self):
         """Execute the configured interactions."""
         log.info("Executing configured push interations.")
-        
+
         for interaction in self.interactions:
             interaction.execute()
 
@@ -305,8 +304,8 @@ def main(ctx, user, push_config):
     push = Push(main_confs=main_confs,
                 user=user,
                 push_config=push_config)
-    
-    
+
+
 
 
     push.login()

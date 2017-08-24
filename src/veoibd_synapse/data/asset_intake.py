@@ -2,8 +2,7 @@
 """Code supporting the information discovery and assimilation of data/file assets."""
 
 # Imports
-import logging
-log = logging.getLogger(__name__)
+from logzero import logger as log
 
 import os
 from pathlib import Path
@@ -36,12 +35,12 @@ Row = namedtuple('Row', ["path_hash","file_name",
 # Functions
 def pathify_assets(FILE_TYPE):
     """Converts the list of path glob patterns in the config file to list of ``Path`` objects.
-    
+
     In place conversion.
-    
+
     Args:
         FILE_TYPE (``dict``-like): key=file type, val=list of path glob patterns
-    
+
     Returns:
         ``None``
     """
@@ -50,13 +49,13 @@ def pathify_assets(FILE_TYPE):
         for i in FILE_TYPE[key]:
             p = Path(i)
             paths.extend(list(p.parent.glob(p.name)))
-            
+
         FILE_TYPE[key] = paths
-    
-    
+
+
 def build_asset_table(asset_conf, pathify=True):
     """Return asset table as ``pd.DataFrame`` built from ``asset_conf`` info.
-    
+
     Column Discriptions:
         - path_hash (`int`)
         - file_name (`str`)
@@ -69,11 +68,11 @@ def build_asset_table(asset_conf, pathify=True):
             - WES, WGS, RNAseq, etc
         - bytes (`int`)
         - subject_id (`str`)
-    
+
     Args:
         asset_conf (``dict``-like): configuration tree built from asset_intake configuration file.
         pathify (``bool``): whether or not to run ``pathify_assets()`` on the paths in ``asset_conf``
-    
+
     Returns:
         ``pd.DataFrame``
     """
@@ -86,11 +85,11 @@ def build_asset_table(asset_conf, pathify=True):
               "bytes": np.int64,
               "subject_id": str,
               }
-    
+
     if pathify:
         for batch in asset_conf.BATCHES.values():
             pathify_assets(FILE_TYPE=batch.FILE_TYPE)
-    
+
     rows = []
     for batch_name, batch in asset_conf.BATCHES.items():
         for ftype, paths in batch.FILE_TYPE.items():
@@ -104,7 +103,7 @@ def build_asset_table(asset_conf, pathify=True):
                 assay_type = batch.ASSAY_TYPE
                 bytes = path.stat().st_size
                 subject_id = path.stem
-                
+
                 rows.append(Row(path_hash=path_hash,
                                 file_name=file_name,
                                 directory=directory,
@@ -118,6 +117,3 @@ def build_asset_table(asset_conf, pathify=True):
     assets = pd.DataFrame(data=rows, index=None, columns=None, dtype=None, copy=False).astype(dtype=dtypes, copy=True, raise_on_error=True)
 
     return assets
-
-
-    
