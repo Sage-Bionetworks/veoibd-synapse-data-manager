@@ -17,6 +17,9 @@ bedtools    # not_pipable
 samtools    # not_pipable
 vcftools    # not_pipable
 bcftools    # not_pipable
+snpeff    # not_pipable
+snpsift    # not_pipable
+vt    # not_pipable
 pyparsing
 bumpversion
 
@@ -35,3 +38,4 @@ xlrd
 xlwt
 networkx
 htslib    # not_pipable
+tqdm>=4.10.0
