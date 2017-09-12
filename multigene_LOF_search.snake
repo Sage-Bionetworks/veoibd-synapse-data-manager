@@ -4,7 +4,7 @@ import inspect
 
 from pathlib import Path
 
-import yaml
+import ruamel.yaml as yaml
 
 import pandas as pd
 import numpy as np
