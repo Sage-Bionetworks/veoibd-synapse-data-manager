@@ -74,10 +74,12 @@ def load_vcf(path, ignore_variants=None, extract_from_info=None):
 
     return m
 
+def identity(x):
+    return x
 
 def add_parsed_info_col(df, col_name, func=None):
     if func is None:
-        func = lambda x: x
+        func = identity
 
     t = df.copy()
     t.loc[:, col_name] = t.loc[:, 'INFO'].apply(lambda x: func(x))
@@ -105,7 +107,7 @@ def vcf_to_zygosity_table(vcf_dict, genome_version=None, extra_index_cols=None, 
         extra_index_cols = []
 
     if sample_name_converter is None:
-        sample_name_converter = lambda x: x
+        sample_name_converter = identity
 
     meta = vcf_dict.meta
     sample = vcf_dict.sample
