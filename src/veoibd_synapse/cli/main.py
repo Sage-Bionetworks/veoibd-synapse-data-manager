@@ -105,7 +105,6 @@ valid_config_kinds = ['all',
 @click.pass_context
 def configs(ctx, list_, generate_configs, kind, prefix):
     """Manage configuration values and files."""
-    print
     if prefix is None:
         prefix = dt.datetime.today().isoformat()
 
