@@ -26,6 +26,11 @@ def extract_column_names(path):
 
 
 def extract_snpeff_gene_from_info(x):
+    """Return the 4th value in the ANN data: "GENE"
+
+    Args:
+        x (str): VCF data row.
+    """
     try:
         return x.split(';ANN=')[1].split('|')[3]
     except IndexError:
@@ -56,11 +61,11 @@ def load_vcf(path, ignore_variants=None, extract_from_info=None):
     for col_name, func in extract_from_info.items():
         meta = add_parsed_info_col(df=meta, col_name=col_name, func=func)
 
-    meta = meta.set_index(['CHROM', 'POS', 'ID', 'REF', 'ALT','QUAL','FORMAT'])
+    meta = meta.set_index(['CHROM', 'POS', 'ID', 'REF', 'ALT', 'QUAL', 'FORMAT'])
 
     sample = vcf[sample_cols]
 
-    sample.index = vcf.set_index(['CHROM', 'POS', 'ID', 'REF', 'ALT','QUAL','FORMAT']).index
+    sample.index = vcf.set_index(['CHROM', 'POS', 'ID', 'REF', 'ALT', 'QUAL', 'FORMAT']).index
 
 
     m.full = vcf
@@ -75,7 +80,7 @@ def add_parsed_info_col(df, col_name, func=None):
         func = lambda x: x
 
     t = df.copy()
-    t.loc[:,col_name] = t.loc[:,'INFO'].apply(lambda x: func(x))
+    t.loc[:, col_name] = t.loc[:, 'INFO'].apply(lambda x: func(x))
 
     return t
 
@@ -105,15 +110,15 @@ def vcf_to_zygosity_table(vcf_dict, genome_version=None, extra_index_cols=None, 
     meta = vcf_dict.meta
     sample = vcf_dict.sample
 
-    new_index_cols = ['CHROM','POS','ID','REF','ALT'] + extra_index_cols
-    zygosity_wide = meta.join(sample.applymap(lambda x: to_012_zygosity(x.split(':')[0]))).reset_index().drop(['FILTER','INFO','QUAL','FORMAT'], axis=1).set_index(new_index_cols)
+    new_index_cols = ['CHROM', 'POS', 'ID', 'REF', 'ALT'] + extra_index_cols
+    zygosity_wide = meta.join(sample.applymap(lambda x: to_012_zygosity(x.split(':')[0]))).reset_index().drop(['FILTER', 'INFO', 'QUAL', 'FORMAT'], axis=1).set_index(new_index_cols)
 
     zygosity_melted = pd.melt(frame=zygosity_wide.reset_index(),
-                        id_vars=new_index_cols,
-                        value_vars=None,
-                        var_name='subject',
-                        value_name='zygosity',
-                        col_level=None)
+                              id_vars=new_index_cols,
+                              value_vars=None,
+                              var_name='subject',
+                              value_name='zygosity',
+                              col_level=None)
 
     # Remove NaN zygosities and recast as category
     zygosity_not_null = zygosity_melted.zygosity.notnull()
