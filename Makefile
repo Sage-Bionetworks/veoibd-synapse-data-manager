@@ -1,5 +1,5 @@
-.PHONY: clean data lint requirements sync_data_to_s3 sync_data_from_s3 github_remote clean_env serve_nb clean-test clean-pyc clean-build docs help
-.DEFAULT_GOAL := help
+.PHONY: clean clean_env data lint environment serve_nb sync_data_to_s3 sync_data_from_s3 github_remote
+
 #################################################################################
 # GLOBALS                                                                       #
 #################################################################################
@@ -154,7 +154,7 @@ else
 	conda create -n $(CONDA_ENV_NAME) --file requirements.txt --yes  && \
 	source activate $(CONDA_ENV_NAME) && \
 	python -m ipykernel install --sys-prefix --name $(CONDA_ENV_NAME) --display-name "$(CONDA_ENV_NAME)" && \
-	pip install -r requirements.pip.txt
+	pip install -r requirements.pip.txt && \
 	pip install -e .
 endif
 
