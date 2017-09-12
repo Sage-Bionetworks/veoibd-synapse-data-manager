@@ -1,4 +1,7 @@
 """Snakemake file."""
+import logging
+from logzero import logger as log
+
 import os
 import inspect
 
