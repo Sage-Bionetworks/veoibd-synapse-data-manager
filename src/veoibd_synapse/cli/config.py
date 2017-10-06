@@ -17,10 +17,10 @@ def replace_config(name, factory_resets, prefix):
 
     Backup existing file.
     """
-
     default_path = factory_resets / name
-    new_path = factory_resets.parent / '{prefix}.{name}'.format(name=name,
-                                                                prefix=prefix)
+    if not prefix == "":
+        new_path = factory_resets.parent / '{prefix}.{name}'.format(name=name,
+                                                                    prefix=prefix)
 
     if new_path.exists():
         stamp = dt.datetime.today().isoformat()
