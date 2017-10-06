@@ -35,7 +35,7 @@ req_paths = ["requirements.pip.txt",
 
 setuptools.setup(
     name="veoibd_synapse",
-    version="0.0.4",
+    version="version='0.1.0'",
     url="git@github.com:ScottSnapperLab/veoibd-synapse-data-manager.git",
 
     author="Gus Dunn",
