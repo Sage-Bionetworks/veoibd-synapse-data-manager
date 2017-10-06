@@ -58,10 +58,7 @@ ALL = []
 # add specific useful stuff to RUN
 RUN.globals.input_vcfs = [vcf.parts[-1].rstrip('.vcf.gz') for vcf in cfg.FILTER_SUBJECTS_VCFS.IN.VCF_DIR.glob("*.vcf.gz")]
 
-# RUN.globals.draw_rule = config.COMMON.DRAW_RULE
-RUN.globals.draw_rule = 'all'
-
-
+log.debug("BEGIN defining rules.")
 ############ BEGIN PIPELINE RULES ############
 # ------------------------- #
 #### VCF_CHECK ####
