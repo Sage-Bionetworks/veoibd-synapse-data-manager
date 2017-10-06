@@ -6,6 +6,7 @@
 *.ppt
 *.pptx
 *.pdf
+*.svg
 
 configs/*
 !configs/factory_resets
@@ -83,8 +84,9 @@ target/
 *.db
 *.rdb
 
-# Pycharm
+# IDE Settings
 .idea
+.vscode
 
 # Snakemake
 .snakemake/
