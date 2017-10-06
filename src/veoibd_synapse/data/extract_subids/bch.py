@@ -6,6 +6,7 @@ from logzero import logger as log
 
 import veoibd_synapse.errors as e
 
+from .utils.bch import process_r1
 
 # Metadata
 __author__ = "Gus Dunn"
@@ -23,4 +24,4 @@ def subject_from_regeneron1_fname(fname):
         ``str``
     """
     # return fname.split('_')[1].rstrip('P').rstrip('M').rstrip('D').rstrip('F')
-    return fname.split('_')[1]
+    return fname.split('_')[1].replace('-', '.')
