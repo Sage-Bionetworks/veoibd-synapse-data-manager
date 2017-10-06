@@ -64,19 +64,32 @@ log.debug("BEGIN defining rules.")
 #### VCF_CHECK ####
 VCF_CHECK = SnakeRule(run=RUN, name="VCF_CHECK")
 
+# input
+VCF_CHECK.i.subjects_vcf = str(VCF_CHECK.IN.VCF_DIR / "{vcf}.vcf.gz"),
 
+# output
+VCF_CHECK.o.vcf_checked_sentinel = str(RUN.interim_dir / "{vcf}.vcf.has_been_checked")
 
-rule save_run_config:
+VCF_CHECK.o.vcf_checked_sentinel_expd = expand(VCF_CHECK.o.vcf_checked_sentinel,
+                                               vcf=RUN.globals.input_vcfs)
+
+# ---
+rule VCF_CHECK:
+    log:
+        path=str(VCF_CHECK.log)
+
     input:
+        subjects_vcf=VCF_CHECK.i.subjects_vcf,
+
     output:
-        file=str(SAVE_RUN_CONFIG.o.file)
+        subjects_checked_vcf=VCF_CHECK.o.vcf_checked_sentinel,
 
     run:
         snpsift = """SnpSift -Xmx4g vcfCheck {input.subjects_vcf} 2> {output.subjects_checked_vcf} 2> {log.path}"""
         shell(snpsift)
 
-PRE.append(rules.save_run_config.output)
-ALL.append(rules.save_run_config.output)
+ALL.append(VCF_CHECK.o.vcf_checked_sentinel_expd)
+
 
 
 
@@ -130,7 +143,8 @@ ALL.append(rules.FILTER_GTF.output)
 FILTER_SUBJECTS_VCFS = SnakeRule(run=RUN, name="FILTER_SUBJECTS_VCFS")
 
 # input
-FILTER_SUBJECTS_VCFS.i.subjects_vcf = str(FILTER_SUBJECTS_VCFS.IN.VCF_DIR / "{vcf}.vcf.gz"),
+FILTER_SUBJECTS_VCFS.i.subjects_vcf = str(VCF_CHECK.IN.VCF_DIR / "{vcf}.vcf.gz"),
+FILTER_SUBJECTS_VCFS.i.vcf_checked_sentinel_expd = VCF_CHECK.o.vcf_checked_sentinel_expd,
 FILTER_SUBJECTS_VCFS.i.filtered_gtf = FILTER_GTF.o.filtered_gtf
 
 # output
@@ -147,6 +161,7 @@ rule FILTER_SUBJECTS_VCFS:
 
     input:
         subjects_vcf=FILTER_SUBJECTS_VCFS.i.subjects_vcf,
+        vcf_checked_sentinel_expd=FILTER_SUBJECTS_VCFS.i.vcf_checked_sentinel_expd,
         filtered_gtf=FILTER_SUBJECTS_VCFS.i.filtered_gtf,
 
     output:
