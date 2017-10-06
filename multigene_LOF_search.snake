@@ -19,8 +19,9 @@ sns.set_style("whitegrid")
 
 import munch
 
+from veoibd_synapse.rules import pathify_by_key_ends, SnakeRule, SnakeRun, recode_graph, apply_template
+from veoibd_synapse.misc import process_config
 
-from veoibd_synapse.rules import pathify_by_key_ends, SnakeRule, SnakeRun
 from veoibd_synapse import misc
 
 # Metadata
