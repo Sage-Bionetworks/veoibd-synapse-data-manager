@@ -114,7 +114,7 @@ FILTER_GTF.o.filtered_gtf = str(FILTER_GTF.out_dir / "filtered_gtf.gtf")
 rule FILTER_GTF:
     log:
         path=str(FILTER_GTF.log)
-        
+
     params:
         a_patterns=FILTER_GTF.p.a_patterns,
         b_pattern=FILTER_GTF.p.b_pattern,
@@ -128,14 +128,14 @@ rule FILTER_GTF:
 
     run:
         shell("rm -f {log.path}")
-        
+
         cmd_tmplt = """grep -P '{pattern}' {{input.gtf}} >> {{output.temp_gtf}} 2>> {{log.path}}"""
-        
+
         for pattern in params.a_patterns:
             shell(cmd_tmplt.format(pattern=pattern))
-            
+
         shell("""grep -P "{pattern}" {{output.temp_gtf}} > {{output.filtered_gtf}} 2>> {{log.path}}""".format(pattern=params.b_pattern))
-        
+
 
 ALL.append(rules.FILTER_GTF.output)
 
@@ -171,7 +171,7 @@ rule FILTER_SUBJECTS_VCFS:
 
     run:
         shell("vt view -H {input.subjects_vcf} > {output.subjects_filtered_vcf} 2> {log.path}")
-        
+
         shell("bedtools intersect -u -a {input.subjects_vcf} -b {input.filtered_gtf} >> "
               " {output.subjects_filtered_vcf} 2>> {log.path}")
 
