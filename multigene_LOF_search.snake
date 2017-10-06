@@ -24,19 +24,34 @@ from veoibd_synapse.rules import pathify_by_key_ends, SnakeRule, SnakeRun
 from veoibd_synapse import misc
 
 #### COMMON RUN STUFF ####
-ORIGINAL_CONFIG_AS_STRING = yaml.dump(config, default_flow_style=False)
-config = pathify_by_key_ends(config)
-config = munch.munchify(config)
-config.SNAKEFILE = Path(inspect.getfile(inspect.currentframe()))
+original_config_path = Path(workflow.overwrite_configfile)
+ORIGINAL_CONFIG_AS_STRING = original_config_path.read_text()
+
+cfg = process_config(str(original_config_path))
+cfg = pathify_by_key_ends(cfg)
+
+# Decide whether to output debug lvl msgs
+if cfg.COMMON.DEBUG == True:
+    logzero.loglevel(logging.DEBUG)
+else:
+    logzero.loglevel(logging.INFO)
 
 
-RUN = SnakeRun(cfg=config)
+log.debug("Initializing common run stuff.")
+RUN = SnakeRun(cfg=cfg, snakefile=Path(inspect.getfile(inspect.currentframe())))
+
+
+# Save current copy of the configfile
+SAVED_CONFIG = RUN.out_dir / "{NAME}.yaml".format(NAME=RUN.name)
+SAVED_CONFIG.parent.mkdir(parents=True, exist_ok=True)
+with SAVED_CONFIG.open('w') as cnf_out:
+    cnf_out.write(ORIGINAL_CONFIG_AS_STRING)
 
 PRE = []
 ALL = []
 
 # add specific useful stuff to RUN
-RUN.globals.input_vcfs = [vcf.parts[-1].rstrip('.vcf.gz') for vcf in config.FILTER_SUBJECTS_VCFS.IN.VCF_DIR.glob("*.vcf.gz")]
+RUN.globals.input_vcfs = [vcf.parts[-1].rstrip('.vcf.gz') for vcf in cfg.FILTER_SUBJECTS_VCFS.IN.VCF_DIR.glob("*.vcf.gz")]
 
 # RUN.globals.draw_rule = config.COMMON.DRAW_RULE
 RUN.globals.draw_rule = 'all'
@@ -44,9 +59,8 @@ RUN.globals.draw_rule = 'all'
 
 ############ BEGIN PIPELINE RULES ############
 # ------------------------- #
-#### SAVE_RUN_CONFIG ####
-SAVE_RUN_CONFIG = SnakeRule(run=RUN, name="SAVE_RUN_CONFIG")
-SAVE_RUN_CONFIG.o.file = RUN.out_dir / "{NAME}.yaml".format(NAME=RUN.name)
+#### VCF_CHECK ####
+VCF_CHECK = SnakeRule(run=RUN, name="VCF_CHECK")
 
 
 
@@ -303,7 +317,7 @@ rule draw_rule_graph:
 
     input:
         Snakefile=str(RUN.snakefile.absolute()),
-        config=rules.save_run_config.output,
+        config=str(SAVED_CONFIG),
 
     output:
         rule_graph_dot=DRAW_RULE_GRAPH.o.rule_graph_dot,
@@ -311,15 +325,15 @@ rule draw_rule_graph:
         recoded_rule_graph_svg=DRAW_RULE_GRAPH.o.recoded_rule_graph_svg,
 
     run:
-        rule_name = RUN.globals.draw_rule
+        rule_name = cfg.COMMON.DRAW_RULE
         shell("snakemake -p -s {input.Snakefile}  --configfile {input.config} "+rule_name+" --rulegraph > {output.rule_graph_dot}")
 
-        misc.recode_graph(dot=output.rule_graph_dot,
-                         new_dot=output.recoded_rule_graph_dot,
-                         pretty_names=RUN.pretty_names,
-                         rules_to_drop=['save_run_config',rule_name],
-                         color="#50D0FF",
-                         use_pretty_names=False)
+        recode_graph(dot=output.rule_graph_dot,
+                     new_dot=output.recoded_rule_graph_dot,
+                     pretty_names=RUN.pretty_names,
+                     rules_to_drop=['save_run_config',rule_name],
+                     color="#50D0FF",
+                     use_pretty_names=False)
 
         shell("dot -Tsvg {output.recoded_rule_graph_dot} -o {output.recoded_rule_graph_svg} -v ; echo ''")
 
@@ -348,7 +362,7 @@ rule draw_dag_graph:
 
     input:
         Snakefile=str(RUN.snakefile.absolute()),
-        config=rules.save_run_config.output,
+        config=str(SAVED_CONFIG),
 
     output:
         dag_graph_dot=DRAW_DAG_GRAPH.o.dag_graph_dot,
@@ -356,14 +370,14 @@ rule draw_dag_graph:
         recoded_dag_graph_svg=DRAW_DAG_GRAPH.o.recoded_dag_graph_svg,
 
     run:
-        rule_name = RUN.globals.draw_rule
+        rule_name = cfg.COMMON.DRAW_RULE
         shell("snakemake -p -s {input.Snakefile}  --configfile {input.config} "+rule_name+" --dag > {output.dag_graph_dot}")
 
-        misc.recode_graph(dot=output.dag_graph_dot,
-                         new_dot=output.recoded_dag_graph_dot,
-                         pretty_names=RUN.pretty_names,
-                         rules_to_drop=['save_run_config',rule_name],
-                         color="#50D0FF",
-                         use_pretty_names=False)
+        recode_graph(dot=output.dag_graph_dot,
+                     new_dot=output.recoded_dag_graph_dot,
+                     pretty_names=RUN.pretty_names,
+                     rules_to_drop=['save_run_config',rule_name],
+                     color="#50D0FF",
+                     use_pretty_names=False)
 
         shell("dot -Tsvg {output.recoded_dag_graph_dot} -o {output.recoded_dag_graph_svg} -v ; echo ''")
