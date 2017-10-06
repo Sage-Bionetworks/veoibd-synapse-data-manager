@@ -2,7 +2,7 @@
 """Provide error classes for veoibd-synapse-data-manager."""
 
 # Imports
-from logzero import logger as log
+
 
 # Metadata
 __author__ = "Gus Dunn"
