@@ -70,8 +70,8 @@ rule save_run_config:
         file=str(SAVE_RUN_CONFIG.o.file)
 
     run:
-        with open(output.file, 'w') as cnf_out:
-            cnf_out.write(ORIGINAL_CONFIG_AS_STRING)
+        snpsift = """SnpSift -Xmx4g vcfCheck {input.subjects_vcf} 2> {output.subjects_checked_vcf} 2> {log.path}"""
+        shell(snpsift)
 
 PRE.append(rules.save_run_config.output)
 ALL.append(rules.save_run_config.output)
@@ -197,7 +197,7 @@ rule SNPEFF:
         snpeff_vcf=SNPEFF.o.snpeff_vcf,
 
     shell:
-        "snpEff -v -stats {output.stats} {params.genome_db} {input.subjects_filtered_vcf} > {output.snpeff_vcf} "
+        "snpEff -Xmx4g -v -stats {output.stats} {params.genome_db} {input.subjects_filtered_vcf} > {output.snpeff_vcf} "
         "&> {log.path} "
 
 ALL.append(SNPEFF.o.stats_expd)
@@ -238,7 +238,7 @@ rule SNPSIFT_ANNOTATE:
         annotated_vcf=SNPSIFT_ANNOTATE.o.annotated_vcf,
 
     shell:
-        "SnpSift annotate {input.dbsnp} {input.snpeff_vcf} > {output.annotated_vcf} "
+        "SnpSift -Xmx4g annotate {input.dbsnp} {input.snpeff_vcf} > {output.annotated_vcf} "
         "&> {log.path} "
 
 ALL.append(SNPSIFT_ANNOTATE.o.annotated_vcf_expd)
@@ -276,7 +276,7 @@ rule SNPSIFT:
         snpsift_vcf=SNPSIFT.o.snpsift_vcf,
 
     shell:
-        """cat {input.snpeff_vcf} | SnpSift filter "{params.filter_str}" > {output.snpsift_vcf}"""
+        """cat {input.snpeff_vcf} | SnpSift -Xmx4g filter "{params.filter_str}" > {output.snpsift_vcf}"""
         "&> {log.path} "
 
 ALL.append(SNPSIFT.o.snpsift_vcf_expd)
