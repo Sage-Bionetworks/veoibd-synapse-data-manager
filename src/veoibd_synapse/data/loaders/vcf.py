@@ -9,8 +9,10 @@ import pandas as pd
 
 from munch import Munch, munchify
 
+from veoibd_synapse.misc import nan_to_str
 import veoibd_synapse.errors as e
 
+import cyvcf2
 
 # Metadata
 __author__ = "Gus Dunn"
@@ -35,6 +37,19 @@ def extract_snpeff_gene_from_info(x):
         return x.split(';ANN=')[1].split('|')[3]
     except IndexError:
         return np.NaN
+
+
+def extract_snpeff_gene_from_cyvcf2_variant(variant):
+    """Return the 4th value in the ANN data: "GENE".
+
+    Args:
+        variant (cyvcf2.Variant): A single ``cyvcf2.Variant`` object.
+    """
+    try:
+        return variant.INFO.get("ANN").split('|')[3]
+    except IndexError:
+        return np.NaN
+
 
 def load_vcf(path, ignore_variants=None, extract_from_info=None):
     if ignore_variants is None:
@@ -133,3 +148,72 @@ def vcf_to_zygosity_table(vcf_dict, genome_version=None, extra_index_cols=None, 
     zygosity_melted = zygosity_melted.rename(columns={'subject': 'subid'})
 
     return zygosity_melted.assign(genome_version=genome_version)
+
+
+def cyvcf2_to_zygosity_table(vcf_path, genome_version=None, extract_from_info=None, sample_name_converter=None):
+    """Take cyvcf2 VCF, return pd.DataFrame."""
+    if genome_version is None:
+        genome_version = "Not Provided"
+
+    if extract_from_info is None:
+        extract_from_info = {}
+    else:
+        if not isinstance(extract_from_info, OrderedDict):
+            log.warn("To guarantee the order of your output MultiIndex, use an `OrderedDict` for `extract_from_info`.")
+
+    if sample_name_converter is None:
+        sample_name_converter = identity
+
+    vcf = cyvcf2.VCF(str(vcf_path))
+
+    gt_type_map = {vcf.HOM_REF: "HOM_REF",
+                   vcf.HET: "HET",
+                   vcf.HOM_ALT: "HOM_ALT",
+                   vcf.UNKNOWN: "UNKNOWN"}
+
+    zyg_ = Munch()
+
+    ROW_IDX = namedtuple("CYVCF2_TO_ZYGOSITY_TABLE_INDEX",
+                         ["CHROM", "POS", "ID", "REF", "ALT", "FORMAT"] + list(extract_from_info.keys()))
+
+    process_row_idx_fields = OrderedDict(CHROM=lambda variant: variant.CHROM,
+                                         POS=lambda variant: variant.POS,
+                                         ID=lambda variant: nan_to_str(x=variant.ID,
+                                                                       replacement="."),
+                                         REF=lambda variant: variant.REF,
+                                         ALT=lambda variant: ",".join(variant.ALT),
+                                         FORMAT=lambda variant: ":".join(variant.FORMAT))
+
+    process_row_idx_fields.update(extract_from_info)
+
+    for variant in vcf:
+        fields = dict()
+        for f in ROW_IDX._fields:
+            fields[f] = process_row_idx_fields[f](variant)
+
+        row_idx = ROW_IDX(**fields)
+
+        row_data = pd.Series(tuple(variant.gt_types), index=vcf.samples)
+
+        zyg_[row_idx] = row_data
+
+    zyg = pd.DataFrame(zyg_).T
+    zyg.index.names = ROW_IDX._fields
+    zyg = zyg.applymap(lambda x: gt_type_map[x])
+    zyg = zyg.rename(columns=sample_name_converter)
+
+    return zyg
+
+
+
+def frac_hom_alt(variant):
+    return variant.num_hom_alt / variant.num_called
+
+def frac_hom_ref(variant):
+    return variant.num_hom_ref / variant.num_called
+
+def frac_het(variant):
+    return variant.num_het / variant.num_called
+
+def num_called(variant):
+    return variant.num_called
