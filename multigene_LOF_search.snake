@@ -23,6 +23,11 @@ import munch
 from veoibd_synapse.rules import pathify_by_key_ends, SnakeRule, SnakeRun
 from veoibd_synapse import misc
 
+# Metadata
+__author__ = "Gus Dunn"
+__email__ = "w.gus.dunn@gmail.com"
+
+
 #### COMMON RUN STUFF ####
 original_config_path = Path(workflow.overwrite_configfile)
 ORIGINAL_CONFIG_AS_STRING = original_config_path.read_text()
