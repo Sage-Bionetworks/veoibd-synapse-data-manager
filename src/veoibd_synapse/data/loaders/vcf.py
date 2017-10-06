@@ -97,7 +97,7 @@ def add_parsed_info_col(df, col_name, func=None):
         func = identity
 
     t = df.copy()
-    t.loc[:, col_name] = t.loc[:, 'INFO'].apply(lambda x: func(x))
+    t.loc[:, col_name] = t.loc[:, 'INFO'].apply(func)
 
     return t
 
