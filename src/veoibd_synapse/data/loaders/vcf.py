@@ -2,12 +2,13 @@
 """Provide code needed to load VCF files."""
 
 # Imports
+from collections import namedtuple, OrderedDict
 from logzero import logger as log
 
 import numpy as np
 import pandas as pd
 
-from munch import Munch, munchify
+from munch import Munch
 
 from veoibd_synapse.misc import nan_to_str
 import veoibd_synapse.errors as e
