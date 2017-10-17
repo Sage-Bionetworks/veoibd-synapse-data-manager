@@ -58,6 +58,14 @@ BROWSER := python -c "$$BROWSER_PYSCRIPT"
 ## alias for show-help
 help: show-help
 
+## start mongodb database server
+start-mongodb:
+	mongod --config configs/mongodb.yaml
+
+## stop mongodb database server
+stop-mongodb:
+	mongod --config configs/mongodb.yaml --shutdown
+
 
 ## remove all build, test, coverage and Python artifacts
 clean: clean-build clean-pyc clean-test
