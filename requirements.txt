@@ -22,9 +22,6 @@ snpsift    # not_pipable
 vt    # not_pipable
 pyparsing
 bumpversion
-
-
-# NEEDED BY CLI
 snakemake>=3.4.2
 click
 synapseclient>=1.5.1
