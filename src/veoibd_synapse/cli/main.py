@@ -77,7 +77,8 @@ valid_config_kinds = ['all',
                       'projects',
                       'push',
                       'pull',
-                      'logging']
+                      'logging',
+                      'mongodb']
 
 
 @run.command()
