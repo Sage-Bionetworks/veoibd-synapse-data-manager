@@ -6,6 +6,7 @@ import os
 from pathlib import Path
 import datetime as dt
 import shutil
+import shlex
 
 from munch import Munch, munchify, unmunchify
 import ruamel.yaml as yaml
@@ -21,6 +22,8 @@ from veoibd_synapse.misc import process_config, update_configs
 import veoibd_synapse.errors as e
 
 from logzero import logger as log
+
+import sh
 
 # Metadata
 __author__ = "Gus Dunn"
@@ -168,6 +171,54 @@ def syncdb(ctx, user, team_name):
     _syncdb.main(ctx, user, team_name)
 
 
+@run.group()
+@click.pass_context
+def mongo(ctx):
+    """Manage controling the mongodb database.
+
+    For command specific help text, call the specific
+    command followed by the --help option.
+    """
+
+
+@mongo.command(name="start")
+@click.pass_context
+def mongo_start(ctx):
+    """Start the mongod daemon using the options in configs/mongodb.yaml."""
+    opt_str = "--config configs/mongodb.yaml"
+    cmd_parts = shlex.split(opt_str)
+    output = sh.mongod(cmd_parts)
+
+    if output.exit_code == 0:
+        log.info("mongod was started successfully.")
+    else:
+        log.error(f"The command returned exit status: {output.exit_code}.")
+
+
+@mongo.command(name="stop")
+@click.pass_context
+def mongo_stop(ctx):
+    """Safely stop the mongod daemon."""
+    opt_str = "--config configs/mongodb.yaml --shutdown"
+    cmd_parts = shlex.split(opt_str)
+    output = sh.mongod(cmd_parts)
+
+    if output.exit_code == 0:
+        log.info("mongod was shutdown successfully.")
+    else:
+        log.error(f"The command returned exit status: {output.exit_code}.")
+
+
+@mongo.command(name="status")
+@click.pass_context
+def mongo_status(ctx):
+    """Get continuous information about the database status.
+    
+    To cancel the information stream and exit the command press [ctrl+c].
+    """
+    opt_str = ""
+    cmd_parts = shlex.split(opt_str)
+    output = sh.mongostat(cmd_parts)
 
 
 # Business
