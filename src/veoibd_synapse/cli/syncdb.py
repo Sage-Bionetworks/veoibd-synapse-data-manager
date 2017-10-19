@@ -171,3 +171,4 @@ class TeamSubjectDatabase(SubjectDatabase):
 def main(ctx, user, team_name):
     """"""
     main_confs = ctx.obj.CONFIG
+    raise e.NotImplementedYet()
