@@ -175,4 +175,4 @@ def syncdb(ctx, user, team_name):
 
 # Business
 if __name__ == '__main__':
-    run(obj=Munch())
+    run(ctx=Munch())
