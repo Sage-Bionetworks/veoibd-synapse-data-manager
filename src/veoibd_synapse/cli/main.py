@@ -33,7 +33,7 @@ def setup_logging(conf_dict):
     """Set up logging configurations."""
     # logging.config.dictConfig(config=conf_dict)
     # NOTE: converting to logzero. for now ignore logging config till I can learn how to alter logzero with the configs.
-    log.debug(msg='Setup logging configurations.')
+    # log.debug(msg='Setup logging configurations.')
 
 
 @click.group(invoke_without_command=True)
