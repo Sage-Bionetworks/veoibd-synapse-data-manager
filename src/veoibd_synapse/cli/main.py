@@ -152,9 +152,6 @@ def push(ctx, user, push_config):
     _push.main(ctx, user, push_config)
 
 
-
-
-
 @run.command()
 @click.option("-u", "--user",
               type=str,
