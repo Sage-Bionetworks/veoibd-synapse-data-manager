@@ -71,7 +71,7 @@ def run(ctx=None, config=None, home=None):
         exit(0)
 
 
-valid_config_kinds = ['all',
+VALID_CONFIG_KINDS = ['all',
                       'site',
                       'users',
                       'projects',
@@ -93,7 +93,7 @@ valid_config_kinds = ['all',
               show_default=True,
               default=False)
 @click.option('-k', '--kind',
-              type=click.Choice(valid_config_kinds),
+              type=click.Choice(VALID_CONFIG_KINDS),
               help="Which type(s) of config should we replace? May be repeated.",
               multiple=True,
               show_default=True,
@@ -119,7 +119,7 @@ def configs(ctx, list_, generate_configs, kind, prefix):
 
     factory_resets = Path('configs/factory_resets')
 
-    default_files = {k: factory_resets / '{kind}.yaml'.format(kind=k) for k in valid_config_kinds[1:]}
+    default_files = {k: factory_resets / '{kind}.yaml'.format(kind=k) for k in VALID_CONFIG_KINDS[1:]}
     default_files["all"] = factory_resets.glob('*.yaml')
 
     if generate_configs:
