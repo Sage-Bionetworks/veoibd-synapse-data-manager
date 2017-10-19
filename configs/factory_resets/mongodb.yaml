@@ -3,14 +3,13 @@ processManagement:
 net:
    bindIp: 127.0.0.1
    port: 27017
-storage:
-   dbPath: data/mongodb/db
 systemLog:
    destination: file
    path: "data/mongodb/logs/mongod.log"
    logAppend: true
    quiet: false
 storage:
+   dbPath: "data/mongodb/db"
    journal:
       enabled: true
 security:
