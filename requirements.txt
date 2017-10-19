@@ -38,3 +38,4 @@ htslib    # not_pipable
 tqdm>=4.10.0
 mongodb-bin    # not_pipable
 mongoengine
+sh
