@@ -1,3 +1,4 @@
 recommonmark
 logzero
-snaketools==0.0.2
+# snaketools==0.0.2
+snaketools
