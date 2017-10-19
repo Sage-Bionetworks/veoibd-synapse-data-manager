@@ -292,11 +292,6 @@ class PushInteraction(BaseInteraction):
         return local_paths
 
 
-
-
-
-
-
 def main(ctx, user, push_config):
     """Consume a push-config file, execute described transactions, save record of transactions."""
     main_confs = ctx.obj.CONFIG
@@ -304,9 +299,6 @@ def main(ctx, user, push_config):
     push = Push(main_confs=main_confs,
                 user=user,
                 push_config=push_config)
-
-
-
 
     push.login()
     push.execute()
