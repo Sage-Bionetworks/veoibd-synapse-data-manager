@@ -11,7 +11,8 @@
 configs/*
 !configs/factory_resets
 
-
+# mypy
+.mypy_cache/
 
 # LibreOffice lock files
 .~lock.*
