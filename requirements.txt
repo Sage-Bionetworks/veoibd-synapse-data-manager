@@ -2,17 +2,15 @@
 # $ conda create --name env_name -c bioconda  --file <this file>
 
 
-python>=3.5    # not_pipable
+python>=3.6    # not_pipable
 graphviz>=2.38.0    # not_pipable
 pip
 Sphinx
 sphinx_rtd_theme
 jupyter
-jupyter_nbextensions_configurator
-widgetsnbextension
-jupyter_contrib_nbextensions
+jupyterlab
+ipykernel
 pandoc    # not_pipable
-ipython
 bedtools    # not_pipable
 samtools    # not_pipable
 vcftools    # not_pipable
