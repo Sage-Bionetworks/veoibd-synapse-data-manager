@@ -16,7 +16,7 @@ There are a few things that we take for granted at this point.
 
 ## Registering with [Synapse](https://www.synapse.org/)
 
-1. Create an account at [Synapse](https://www.synapse.org/)
+1. Create an account at [Synapse](https://www.synapse.org/register)
 2. You will need to register and become a [certified user](http://docs.synapse.org/articles/getting_started.html#becoming-a-certified-user).
 
 ## Installing
@@ -134,3 +134,7 @@ And a quick example command would be:
 ```shell
 $ veoibd_synapse push -u GUSDUNN --push-config configs/GUSDUNN/new_WES_files.yaml
 ```
+
+## Contributing
+
+If you are interested in contributing, please see the [contribution guide](CONTRIBUTING.md).
